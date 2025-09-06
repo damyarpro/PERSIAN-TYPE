@@ -1,6 +1,5 @@
 import bpy
 #import os
-print(1214122141478124812842214124124814)
 
 text_buffer = []
 
@@ -840,6 +839,11 @@ def update_visual_cursor_position():
     
     global text_buffer
     global current_char_index
+    
+    # Ensure we are in a valid context (active FONT object in EDIT mode)
+    obj = bpy.context.object
+    if obj is None or obj.type != 'FONT' or obj.mode != 'EDIT':
+        return
 
     # Move visual cursor to the begining of the text
     

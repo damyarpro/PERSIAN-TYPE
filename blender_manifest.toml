@@ -1,10 +1,10 @@
 schema_version = "1.0.0"
 id = "persiantype"
 name = "Persian type"
-version = "1.0.0"
-tagline = "Add Persian type directly to Blender"
+version = "2.0.0"
+tagline = "Add Persian/Arabic type directly to Blender"
 maintainer = "DAMYAR <farsayyad@gmail.com>"
-blender_version_min = "4.2.0"
+blender_version_min = "4.3.0"
 license = ["SPDX:GPL-3.0-or-later"]
 type = "add-on"
 
