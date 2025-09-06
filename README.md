@@ -29,6 +29,8 @@ Highlights (v2.0)
 Compatibility: Blender 4.3.0+
 OS: Windows (Windows Fonts dropdown). All OS: use Custom Fonts Folder.
 
+
+
 Install
 
 Download the addon ZIP
@@ -89,6 +91,8 @@ Save Current Font – bookmark the active font
 
 Refresh – update lists after installing/adding fonts
 
+
+
 FAQ
 
 I installed a new font but don’t see it.
@@ -102,6 +106,8 @@ Click Toggle Text Direction (switch between RTL/LTR).
 
 Why is the font list suddenly fast?
 Windows font list is cached for speed.
+
+
 
 Changelog
 2.0.0
@@ -124,9 +130,9 @@ Addon: (add your license here, e.g., MIT)
 
 Bundled fonts: free/public-license set suited for 3D
 
-© YourName. Contributions welcome!
 
-فارسی
+
+
 
 افزونه Persian Type تایپ و چسباندن متن فارسی/عربی را در بلندر ساده، سریع و استاندارد می‌کند. با امکاناتی مثل حالت تایپ فارسی، چسباندن متن نرمال‌شده و انتخاب فونت از ویندوز یا پوشه دلخواه، برای هنرمندان و طراحانی که پشتیبانی کامل فارسی می‌خواهند عالی است.
 
@@ -139,6 +145,9 @@ Bundled fonts: free/public-license set suited for 3D
 انتخاب سریع فونت (کش ویندوز) + پوشه Custom
 
 ذخیرهٔ فونت محبوب برای استفادهٔ بعدی
+
+
+
 
 نکات برجسته نسخه 2.0
 
@@ -165,6 +174,10 @@ ZIP را انتخاب و افزونه را Enable کنید
 
 N-Panel > Persian Type را باز کنید
 
+
+
+
+
 شروع سریع (گام‌به‌گام)
 
 ۱) با ابزار Text یک متن بسازید → Edit Mode و متن پیش‌فرض را پاک کنید
@@ -184,6 +197,9 @@ N-Panel > Persian Type را باز کنید
 تبدیل‌ها: ي→ی، ك→ک، حذف ـ (کشیده) و ZWJ، حفظ ZWNJ
 
 نتیجه: متن تمیز، استاندارد، آمادهٔ رندر
+
+
+
 
 دربارهٔ فونت‌ها
 
@@ -211,6 +227,10 @@ Save Current Font – ذخیرهٔ فونت فعال
 
 Refresh – به‌روزرسانی لیست‌ها
 
+
+
+
+
 پرسش‌های پرتکرار
 
 فونت جدید نصب کردم اما در لیست نیست.
@@ -224,6 +244,9 @@ Toggle Text Direction را بزنید (RTL/LTR).
 
 چرا لیست فونت‌ها سریع شد؟
 به‌خاطر کش فونت‌های ویندوز.
+
+
+
 
 تغییرات
 2.0.0
@@ -239,3 +262,4 @@ Save Current Font برای دسترسی سریع
 دکمه‌های Refresh در پنل و تنظیمات
 
 بهبود سرعت و تجربهٔ کاربری
+
