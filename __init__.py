@@ -1,18 +1,15 @@
 bl_info = {
     "name": "Persiantype",
     "author": "DAMYAR",
-    "version": (2, 0, 0),
-    "blender": (4, 3, 0),
+    "version": (2, 0, 1),
+    "blender": (5, 0, 1),
     "location": "3Dviewport, Text edit mode",
-    "description": "افزونه ای برای نوشتن متن فارسی در بلندر",
+    "description": "افزونه ای برای نوشتن متن فارسی و عربی در بلندر",
     "warning": "",
     "wiki_url": "",
     "category": "Text",
-    "email": "farsayyad@gmail.ir"
+    "email": "farsayyad@gmail.com"
 }
-
-
-
 
 import bpy
 import os
@@ -20,6 +17,21 @@ from . import Persiantype as Ar
 from .panel import __classes__
 from bpy.types import PropertyGroup, AddonPreferences
 from bpy.props import StringProperty, CollectionProperty, IntProperty, BoolProperty
+
+# Shared normalization for pasted Persian/Arabic text
+def normalize_persian_text(s: str) -> str:
+    if not s:
+        return s
+    trans_map = {
+        '\u064a': '\u06cc',  # Yeh (Arabic) -> Yeh (Persian)
+        '\u0643': '\u06a9',  # Kaf (Arabic) -> Kaf (Persian)
+        '\u0640': '',         # Tatweel
+        '\u200d': '',         # ZWJ remove
+    }
+    out = []
+    for ch in s:
+        out.append(trans_map.get(ch, ch))
+    return ''.join(out)
 
 # Keyboard Handler
 class VIEW3D_OT_PersianTextMode(bpy.types.Operator):
@@ -81,6 +93,17 @@ class VIEW3D_OT_PersianTextMode(bpy.types.Operator):
                     Ar.init()
             return {'PASS_THROUGH'}
             
+        elif (event.type == 'V' and event.value == 'PRESS' and event.ctrl) or (
+            event.type == 'INSERT' and event.value == 'PRESS' and event.shift
+        ):
+            clip = context.window_manager.clipboard
+            if clip:
+                norm = normalize_persian_text(clip)
+                for ch in norm:
+                    Ar.insert_text(ch)
+                return {'RUNNING_MODAL'}
+            return {'PASS_THROUGH'}
+
         elif event.unicode:
             if event.value == 'PRESS':
                 Ar.insert_text(event.unicode)
@@ -448,20 +471,6 @@ class PT_OT_PastePersianNormalize(bpy.types.Operator):
     bl_description = "Paste clipboard text with Persian normalization (Yeh/Kaf, remove Kashida, clean ZWJ)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def normalize_text(self, s: str) -> str:
-        if not s:
-            return s
-        trans_map = {
-            '\u064a': '\u06cc',  # ي -> ی
-            '\u0643': '\u06a9',  # ك -> ک
-            '\u0640': '',         # Tatweel (ـ)
-            '\u200d': '',         # ZWJ remove
-        }
-        out = []
-        for ch in s:
-            out.append(trans_map.get(ch, ch))
-        return ''.join(out)
-
     def execute(self, context):
         obj = context.active_object
         if obj is None or obj.type != 'FONT' or obj.mode != 'EDIT':
@@ -471,7 +480,7 @@ class PT_OT_PastePersianNormalize(bpy.types.Operator):
         if not clip:
             self.report({'WARNING'}, "کلیپ‌بورد خالی است")
             return {'CANCELLED'}
-        norm = self.normalize_text(clip)
+        norm = normalize_persian_text(clip)
         try:
             for ch in norm:
                 Ar.insert_text(ch)
@@ -480,4 +489,3 @@ class PT_OT_PastePersianNormalize(bpy.types.Operator):
         except Exception as e:
             self.report({'ERROR'}, f"Paste failed: {e}")
             return {'CANCELLED'}
-
