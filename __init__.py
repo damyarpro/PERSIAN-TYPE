@@ -8,11 +8,8 @@ bl_info = {
     "warning": "",
     "wiki_url": "",
     "category": "Text",
-    "email": "farsayyad@gmail.ir"
+    "email": "farsayyad@gmail.com"
 }
-
-
-
 
 import bpy
 import os
