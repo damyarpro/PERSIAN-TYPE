@@ -271,6 +271,10 @@ class PersiantypePanel(bpy.types.Panel):
         # Enable Button
         row = box.row()
         row.operator("view3d.persian_text_mode", text="Enable Persian/Arabic Text", icon='GREASEPENCIL')
+
+        # Paste Normalize Button
+        row = box.row()
+        row.operator("pt.paste_persian_normalize", text="Paste Persian (Normalize)")
         
         # Toggle Text Direction Button
         row = box.row()
