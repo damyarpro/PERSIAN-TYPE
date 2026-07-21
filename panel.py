@@ -1,7 +1,318 @@
 import bpy
 import os
+import re
 
 FONT_FOLDER = os.path.join(os.path.dirname(__file__), "fonts")
+DEFAULT_PERSIAN_TEXT = "پرشین تایپ 0.3"
+
+
+def _font_family_stem(filepath):
+    stem = os.path.splitext(os.path.basename(filepath))[0]
+    stem = re.sub(r'\[[^]]+\]$', '', stem)
+    return re.sub(
+        r'[-_ ](?:Thin|ExtraLight|Light|Regular|Medium|SemiBold|Bold|ExtraBold|Black)(?:Italic)?$',
+        '',
+        stem,
+        flags=re.IGNORECASE,
+    )
+
+
+def _find_font_weight_file(font, weight):
+    filepath = bpy.path.abspath(getattr(font, "filepath", "") or "")
+    family = _font_family_stem(filepath or font.name)
+    wanted = ("Regular", "Book", "Roman") if weight == 'REGULAR' else ("Bold",)
+    folders = []
+    if filepath:
+        folders.append(os.path.dirname(filepath))
+    if FONT_FOLDER not in folders:
+        folders.append(FONT_FOLDER)
+
+    matches = []
+    for folder in folders:
+        if not os.path.isdir(folder):
+            continue
+        for filename in os.listdir(folder):
+            if not filename.lower().endswith(('.ttf', '.otf')):
+                continue
+            if _font_family_stem(filename).casefold() != family.casefold():
+                continue
+            stem = os.path.splitext(filename)[0]
+            if any(re.search(rf'(^|[-_ ]){name}($|[-_ ])', stem, re.IGNORECASE) for name in wanted):
+                matches.append(os.path.join(folder, filename))
+    return sorted(matches)[0] if matches else None
+
+
+def create_persian_text(context, *, initial_text=DEFAULT_PERSIAN_TEXT, start_typing=True):
+    """Create a ready-to-edit RTL text object at the 3D Cursor."""
+
+    from . import Persiantype as Ar
+
+    active = context.active_object
+    if active is not None and active.mode != 'OBJECT':
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        except RuntimeError:
+            return None
+
+    for obj in context.selected_objects:
+        obj.select_set(False)
+
+    curve = bpy.data.curves.new("Persian Type 0.3", 'FONT')
+    logical_text = list(initial_text)
+    curve.body = Ar.swap_lines(Ar.link_text(logical_text))
+    curve.align_x = 'RIGHT'
+
+    obj = bpy.data.objects.new("Persian Type 0.3", curve)
+    collection = context.collection or context.scene.collection
+    collection.objects.link(obj)
+    obj.location = context.scene.cursor.location
+    obj.select_set(True)
+    context.view_layer.objects.active = obj
+
+    try:
+        bpy.ops.object.mode_set(mode='EDIT')
+    except RuntimeError:
+        return obj
+
+    # Read the shaped sample into the add-on's edit buffer and place the
+    # logical caret at the end for immediate typing and Backspace support.
+    Ar.init()
+    # The legacy unshaper normalizes Persian Yeh to Arabic Yeh. Preserve the
+    # exact Persian sample in the live logical buffer.
+    Ar.text_buffer = list(logical_text)
+    Ar.current_char_index = len(Ar.text_buffer)
+    Ar.update_visual_cursor_position()
+    curve.align_x = 'RIGHT'
+
+    if start_typing:
+        bpy.ops.view3d.persian_text_mode('INVOKE_DEFAULT')
+        # PersianTextMode re-reads the shaped body. Put the logical caret at
+        # the end so typing appends and Backspace immediately deletes text.
+        Ar.text_buffer = list(logical_text)
+        Ar.current_char_index = len(Ar.text_buffer)
+        Ar.update_visual_cursor_position()
+
+    return obj
+
+
+class VIEW3D_OT_AddPersianText(bpy.types.Operator):
+    bl_idname = "view3d.add_persian_text"
+    bl_label = "Add Text"
+    bl_description = "Create Persian Type 0.3 and start typing in Persian"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.area is not None and context.area.type == 'VIEW_3D'
+
+    def execute(self, context):
+        obj = create_persian_text(context, start_typing=True)
+        if obj is None:
+            self.report({'ERROR'}, "Could not create a Text object in the current mode")
+            return {'CANCELLED'}
+        self.report({'INFO'}, "Persian typing is ready")
+        return {'FINISHED'}
+
+
+class VIEW3D_OT_PastePersianText(bpy.types.Operator):
+    bl_idname = "view3d.paste_persian_text"
+    bl_label = "Paste"
+    bl_description = "Create right-aligned Persian/Arabic text from the clipboard and continue typing"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.area is not None and context.area.type == 'VIEW_3D'
+
+    def execute(self, context):
+        from . import normalize_persian_text
+
+        clipboard = context.window_manager.clipboard
+        if not clipboard or not clipboard.strip():
+            self.report({'WARNING'}, "Clipboard is empty")
+            return {'CANCELLED'}
+
+        # Arabic, Arabic Supplement, Arabic Extended and presentation forms.
+        if not any(
+            '\u0600' <= char <= '\u06ff'
+            or '\u0750' <= char <= '\u077f'
+            or '\u08a0' <= char <= '\u08ff'
+            or '\ufb50' <= char <= '\ufdff'
+            or '\ufe70' <= char <= '\ufeff'
+            for char in clipboard
+        ):
+            self.report({'WARNING'}, "Clipboard does not contain Persian or Arabic text")
+            return {'CANCELLED'}
+
+        logical_text = normalize_persian_text(clipboard)
+        obj = create_persian_text(
+            context,
+            initial_text=logical_text,
+            start_typing=True,
+        )
+        if obj is None:
+            self.report({'ERROR'}, "Could not create a Text object in the current mode")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, "Clipboard text pasted; Persian typing is ready")
+        return {'FINISHED'}
+
+
+class VIEW3D_OT_MeshClean(bpy.types.Operator):
+    bl_idname = "view3d.persian_mesh_clean"
+    bl_label = "Mesh Clean"
+    bl_description = (
+        "Convert selected text to mesh, apply Planar Decimate, Delete Loose, "
+        "and Merge by Distance (0.01401 m)"
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+
+    merge_distance: bpy.props.FloatProperty(
+        name="Merge Distance",
+        default=0.01401,
+        min=0.0,
+        subtype='DISTANCE',
+        unit='LENGTH',
+    )
+
+    @classmethod
+    def poll(cls, context):
+        active = context.active_object
+        return (
+            context.area is not None
+            and context.area.type == 'VIEW_3D'
+            and active is not None
+            and active.type == 'FONT'
+        )
+
+    def execute(self, context):
+        text_objects = [obj for obj in context.selected_objects if obj.type == 'FONT']
+        active = context.active_object
+        if active is not None and active.type == 'FONT' and active not in text_objects:
+            text_objects.append(active)
+
+        if not text_objects:
+            self.report({'WARNING'}, "Select at least one Text object")
+            return {'CANCELLED'}
+
+        if active.mode != 'OBJECT':
+            try:
+                bpy.ops.object.mode_set(mode='OBJECT')
+            except RuntimeError as exc:
+                self.report({'ERROR'}, f"Could not leave Edit Mode: {exc}")
+                return {'CANCELLED'}
+
+        # Convert only the selected text objects; unrelated selected objects
+        # must not be converted along with them.
+        for obj in context.selected_objects:
+            obj.select_set(False)
+        for obj in text_objects:
+            obj.select_set(True)
+        context.view_layer.objects.active = active if active in text_objects else text_objects[0]
+
+        try:
+            bpy.ops.object.convert(target='MESH')
+        except RuntimeError as exc:
+            self.report({'ERROR'}, f"Text conversion failed: {exc}")
+            return {'CANCELLED'}
+
+        mesh_objects = [obj for obj in context.selected_objects if obj.type == 'MESH']
+        try:
+            for obj in mesh_objects:
+                context.view_layer.objects.active = obj
+                modifier = obj.modifiers.new(name="Decimate", type='DECIMATE')
+                modifier.decimate_type = 'DISSOLVE'
+                bpy.ops.object.modifier_apply(modifier=modifier.name)
+
+                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.mesh.select_all(action='SELECT')
+                # Match Mesh > Clean Up > Delete Loose defaults. Enabling
+                # loose faces here can erase the filled surfaces of letters.
+                bpy.ops.mesh.delete_loose(use_verts=True, use_edges=True, use_faces=False)
+                bpy.ops.mesh.remove_doubles(threshold=self.merge_distance)
+                bpy.ops.object.mode_set(mode='OBJECT')
+        except RuntimeError as exc:
+            if context.object is not None and context.object.mode != 'OBJECT':
+                bpy.ops.object.mode_set(mode='OBJECT')
+            self.report({'ERROR'}, f"Mesh cleanup failed: {exc}")
+            return {'CANCELLED'}
+
+        if mesh_objects:
+            context.view_layer.objects.active = mesh_objects[0]
+        self.report(
+            {'INFO'},
+            f"Cleaned {len(mesh_objects)} text object(s); merge distance: {self.merge_distance:.5f} m",
+        )
+        return {'FINISHED'}
+
+
+class VIEW3D_OT_SetFontWeight(bpy.types.Operator):
+    bl_idname = "view3d.set_persian_font_weight"
+    bl_label = "Set Font Weight"
+    bl_description = "Apply Regular or Bold to all characters using Blender's native font slots"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    weight: bpy.props.EnumProperty(
+        items=(
+            ('REGULAR', "Regular", "Use the regular font style"),
+            ('BOLD', "Bold", "Use the bold font style"),
+        ),
+        default='REGULAR',
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.active_object.type == 'FONT'
+
+    def execute(self, context):
+        curve = context.active_object.data
+        variant_path = _find_font_weight_file(curve.font, self.weight)
+
+        if self.weight == 'BOLD':
+            if variant_path is None:
+                self.report({'WARNING'}, "This font family has no separate Bold file")
+                return {'CANCELLED'}
+            curve.font_bold = bpy.data.fonts.load(variant_path, check_existing=True)
+            for character in curve.body_format:
+                character.use_bold = True
+        else:
+            if variant_path is not None:
+                curve.font = bpy.data.fonts.load(variant_path, check_existing=True)
+            for character in curve.body_format:
+                character.use_bold = False
+
+        curve.update_tag()
+        context.view_layer.update()
+        self.report({'INFO'}, f"Font weight: {self.weight.title()}")
+        return {'FINISHED'}
+
+
+class VIEW3D_OT_ResetFontAppearance(bpy.types.Operator):
+    bl_idname = "view3d.reset_persian_font_appearance"
+    bl_label = "Reset Font Settings"
+    bl_description = "Reset size, slant, spacing, offset, extrusion and bevel"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.active_object.type == 'FONT'
+
+    def execute(self, context):
+        curve = context.active_object.data
+        curve.size = 1.0
+        curve.shear = 0.0
+        curve.space_character = 1.0
+        curve.space_word = 1.0
+        curve.space_line = 1.0
+        curve.offset_x = 0.0
+        curve.extrude = 0.0
+        curve.bevel_depth = 0.0
+        curve.bevel_resolution = 4
+        curve.resolution_u = 12
+        curve.update_tag()
+        context.view_layer.update()
+        self.report({'INFO'}, "Font appearance reset")
+        return {'FINISHED'}
 
 class VIEW3D_OT_ToggleTextDirection(bpy.types.Operator):
     bl_idname = "view3d.toggle_text_direction"
@@ -263,7 +574,16 @@ class PersiantypePanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        
+
+        # One-click setup: creates the sample, enables RTL and starts typing.
+        row = layout.row()
+        row.scale_y = 1.35
+        row.operator("view3d.add_persian_text", text="Add Text", icon='ADD')
+        row.operator("view3d.paste_persian_text", text="Paste", icon='PASTEDOWN')
+        clean_row = layout.row()
+        clean_row.scale_y = 1.2
+        clean_row.operator("view3d.persian_mesh_clean", text="Mesh Clean", icon='MOD_DECIM')
+
         # Main Section
         box = layout.box()
         box.label(text="Persian / Arabic Text", icon='FONT_DATA')
@@ -294,6 +614,44 @@ class PersiantypePanel(bpy.types.Panel):
         row.operator("view3d.change_persian_font", text="Change Font", icon='FILE_FONT')
         row.operator("view3d.save_current_persian_font", text="", icon='FOLDER_REDIRECT')
 
+        text_obj = context.active_object
+        appearance = box.column(align=True)
+        appearance.active = text_obj is not None and text_obj.type == 'FONT'
+        appearance.label(text="Appearance", icon='SETTINGS')
+        if text_obj is not None and text_obj.type == 'FONT':
+            curve = text_obj.data
+
+            row = appearance.row(align=True)
+            regular = row.operator("view3d.set_persian_font_weight", text="Regular")
+            regular.weight = 'REGULAR'
+            bold = row.operator("view3d.set_persian_font_weight", text="Bold")
+            bold.weight = 'BOLD'
+
+            row = appearance.row(align=True)
+            row.prop(curve, "size", text="Size")
+            row.prop(curve, "shear", text="Slant")
+
+            appearance.prop(curve, "space_character", text="Character Spacing")
+            appearance.prop(curve, "space_word", text="Word Spacing")
+            appearance.prop(curve, "space_line", text="Line Spacing")
+
+            row = appearance.row(align=True)
+            row.prop(curve, "offset_x", text="Offset")
+            row.prop(curve, "extrude", text="Extrude")
+
+            row = appearance.row(align=True)
+            row.prop(curve, "bevel_depth", text="Bevel")
+            row.prop(curve, "bevel_resolution", text="Segments")
+
+            appearance.prop(curve, "resolution_u", text="Curve Resolution")
+            appearance.operator(
+                "view3d.reset_persian_font_appearance",
+                text="Reset Font Settings",
+                icon='LOOP_BACK',
+            )
+        else:
+            appearance.label(text="Select a Text object", icon='INFO')
+
         # Windows Fonts Section
         box = layout.box()
         box.label(text="Windows Fonts:", icon='FILEBROWSER')
@@ -310,6 +668,11 @@ class PersiantypePanel(bpy.types.Panel):
 
 # Export all classes
 __classes__ = [
+    VIEW3D_OT_AddPersianText,
+    VIEW3D_OT_PastePersianText,
+    VIEW3D_OT_MeshClean,
+    VIEW3D_OT_SetFontWeight,
+    VIEW3D_OT_ResetFontAppearance,
     VIEW3D_OT_ToggleTextDirection,
     VIEW3D_OT_ChangePersianFont,
     VIEW3D_OT_LoadWindowsFont,
