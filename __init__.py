@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Persiantype",
     "author": "DAMYAR",
-    "version": (2, 0, 1),
+    "version": (3, 0, 0),
     "blender": (5, 0, 1),
     "location": "3Dviewport, Text edit mode",
     "description": "افزونه ای برای نوشتن متن فارسی و عربی در بلندر",
@@ -37,6 +37,7 @@ def normalize_persian_text(s: str) -> str:
 class VIEW3D_OT_PersianTextMode(bpy.types.Operator):
     bl_idname = "view3d.persian_text_mode"
     bl_label = "Persian Text Mode"
+    _is_running = False
     
     def modal(self, context, event):
         if bpy.context.object is None or bpy.context.object.type != 'FONT' or bpy.context.object.mode != 'EDIT':
@@ -113,8 +114,16 @@ class VIEW3D_OT_PersianTextMode(bpy.types.Operator):
      
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
+            if self.__class__._is_running:
+                if (bpy.context.object is not None and
+                        bpy.context.object.type == 'FONT' and
+                        bpy.context.object.mode == 'EDIT'):
+                    Ar.init()
+                return {'CANCELLED'}
+
             self.key = ""
             context.window_manager.modal_handler_add(self)
+            self.__class__._is_running = True
             
             if bpy.context.object is not None and bpy.context.object.type == 'FONT' and bpy.context.object.mode == 'EDIT':
                 bpy.ops.object.editmode_toggle()

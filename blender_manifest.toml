@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 id = "persiantype"
 name = "Persian type"
-version = "2.0.1"
+version = "3.0.0"
 tagline = "Add Persian/Arabic type directly to Blender"
 maintainer = "DAMYAR <farsayyad@gmail.com>"
 blender_version_min = "5.0.1"
