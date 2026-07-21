@@ -1,265 +1,206 @@
-Persian Type – Blender Addon (v2.0.0)
+# Persian Type 3.0 — افزونه تایپ فارسی و عربی برای Blender
 
-Easily type, paste, and render clean Persian/Arabic text in Blender — fast, reliable, and artist-friendly.
+[![Latest Release](https://img.shields.io/github/v/release/damyarpro/PERSIAN-TYPE?label=Latest%20Release)](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
+![Blender](https://img.shields.io/badge/Blender-5.0.1%2B-orange)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-فارسی را بخوانید
+ساخت، تایپ، چسباندن، تنظیم فونت و تبدیل متن فارسی یا عربی به Mesh تمیز، مستقیماً داخل Blender.
 
-Why Persian Type?
+Create, type, paste, style, and convert Persian or Arabic text into a clean mesh directly inside Blender.
 
-Smooth RTL typing in Blender
+[دانلود نسخه 3.0](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.0) · [Download version 3.0](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.0)
 
-One-click fix for pasted text (Normalize)
+---
 
-Fast font picking (Windows Fonts cache) + your custom fonts folder
+## فارسی
 
-Save your favorite font for later
+### قابلیت‌های اصلی نسخه 3.0
 
-Highlights (v2.0)
+- **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 0.3» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
+- **Paste:** خواندن متن فارسی یا عربی از Clipboard، نرمال‌سازی حروف و آماده‌سازی برای ادامه تایپ و پاک‌کردن.
+- **تایپ مستقیم فارسی و عربی:** پشتیبانی از تایپ، Backspace، Delete، حرکت مکان‌نما و خطوط چندگانه در Edit Mode.
+- **تغییر جهت متن:** جابه‌جایی سریع میان راست‌به‌چپ و چپ‌به‌راست.
+- **انتخاب فونت:** استفاده از فونت‌های همراه افزونه، فونت‌های Windows یا یک پوشه فونت سفارشی.
+- **تنظیمات ظاهر فونت:** وزن Regular/Bold، اندازه، شیب، فاصله حروف، کلمات و خطوط، Offset، Extrude، Bevel و Curve Resolution.
+- **Mesh Clean:** تبدیل Text انتخاب‌شده به Mesh و پاک‌سازی خودکار توپولوژی.
+- **سازگار با Blender 5:** حداقل نسخه موردنیاز Blender `5.0.1` است و API نسخه `5.2 LTS` نیز بررسی شده است.
 
-⚡ Faster font lists with caching (Windows)
+### نصب
 
-🖋 Pick fonts from Windows or your custom folder
+1. فایل [`persiantype-3.0.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.0/persiantype-3.0.0.zip) را دانلود کنید.
+2. در Blender وارد `Edit > Preferences > Get Extensions` شوید.
+3. از منوی بالا گزینه `Install from Disk` را انتخاب کنید.
+4. فایل ZIP را انتخاب و افزونه را فعال کنید.
+5. در 3D Viewport، پنل کناری را با کلید `N` باز کنید و وارد تب **Persian type** شوید.
 
-💾 Save Current Font to reuse quickly
+### شروع سریع
 
-✂️ Paste Persian (Normalize): fixes common issues (ي→ی, ك→ک, remove tatweel & ZWJ, keep ZWNJ)
+#### ساخت متن جدید
 
-🔄 Refresh buttons in panel & preferences
+1. روی **Add Text** کلیک کنید.
+2. یک Text Object راست‌چین در محل 3D Cursor ساخته می‌شود.
+3. متن نمونه را با صفحه‌کلید ادامه دهید یا با Backspace پاک کنید.
 
-Compatibility: Blender 4.3.0+
-OS: Windows (Windows Fonts dropdown). All OS: use Custom Fonts Folder.
+#### چسباندن متن فارسی یا عربی
 
+1. متن را در Clipboard کپی کنید.
+2. روی **Paste** کلیک کنید.
+3. افزونه حروف عربی `ي` و `ك` را به شکل استاندارد فارسی `ی` و `ک` تبدیل می‌کند، کشیده و ZWJ اضافی را حذف می‌کند و متن را راست‌چین تحویل می‌دهد.
+4. مکان‌نما در انتهای متن قرار می‌گیرد و می‌توانید بلافاصله تایپ را ادامه دهید.
 
+### تنظیم فونت
 
-Install
+یک Text Object را انتخاب کنید و از بخش **Font Settings** استفاده کنید:
 
-Download the addon ZIP
+- انتخاب فونت‌های داخلی افزونه
+- انتخاب و Apply کردن Windows Fonts
+- افزودن پوشه فونت سفارشی
+- ذخیره فونت فعلی در فهرست فونت‌های محبوب
+- تغییر وزن به Regular یا Bold، در صورت وجود فایل Bold در خانواده فونت
+- کنترل Size، Slant، Character/Word/Line Spacing
+- کنترل Offset، Extrude، Bevel، Bevel Segments و Curve Resolution
+- بازگردانی همه تنظیمات با **Reset Font Settings**
 
-Blender → Edit > Preferences > Add-ons > Install…
+> Blender 5.1 محور وزن Variable Font را مستقیماً در Python API ارائه نمی‌کند. گزینه Bold زمانی اثر متفاوت دارد که خانواده انتخاب‌شده فایل Bold جداگانه داشته باشد.
 
-Select the ZIP → Enable the addon
+### Mesh Clean
 
-Open N-Panel > Persian Type
+دکمه **Mesh Clean** روی Text انتخاب‌شده، چه در Object Mode و چه در Edit Mode، این مراحل را اجرا می‌کند:
 
-Quick Start (Step-by-Step)
+1. تبدیل Text به Mesh
+2. افزودن Decimate Modifier در حالت `Planar / Dissolve`
+3. Apply کردن Decimate
+4. اجرای `Mesh > Clean Up > Delete Loose`
+5. اجرای Merge by Distance با مقدار دقیق `0.01401 m`
+6. بازگشت به Object Mode و تحویل Mesh نهایی
 
-Add a Text object → enter Edit Mode and delete the default text
+Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی می‌کند. توجه کنید که پس از تبدیل به Mesh دیگر امکان تغییر فونت وجود ندارد؛ فونت و ظاهر متن را پیش از Mesh Clean تنظیم کنید.
 
-In N-Panel > Persian Type, click Enable Persian/Arabic Text
+### فونت‌های همراه
 
-Click Toggle Text Direction (RTL/LTR) to ensure correct typing & pasting
+افزونه دارای ۷۶ فونت است. نسخه 3.0 خانواده‌های آزاد زیر را نیز اضافه می‌کند:
 
-Type your Persian text and enjoy
+- Vazirmatn
+- Estedad
+- Lalezar
+- Markazi Text
+- Noto Sans Arabic
+- Noto Naskh Arabic
+- Amiri Regular / Bold
+- Scheherazade New Regular / Bold
 
-Choose a font from the Font list (addon/custom) or Windows Fonts (on Windows)
+این فونت‌ها با متن فارسی در Blender آزمایش شده‌اند. فایل مجوز SIL Open Font License هر خانواده در مسیر `fonts/licenses` قرار دارد.
 
-Tip: When you like the current font, hit Save Current Font to keep it handy.
+### میانبر و ابزارهای قدیمی
 
-Paste Persian (Normalize)
+- `Ctrl + F1`: فعال‌سازی حالت تایپ فارسی برای Text Object در Edit Mode
+- **Enable Persian/Arabic Text:** فعال‌سازی دستی حالت تایپ
+- **Paste Persian (Normalize):** چسباندن و نرمال‌سازی متن در Text Object فعلی
+- **Toggle Text Direction:** تغییر RTL/LTR
+- **Refresh:** بازسازی فهرست فونت‌ها
 
-If you paste text and shapes/spacing look off:
+---
 
-Click Paste Persian (Normalize) in Edit Mode
+## English
 
-It will: ي→ی, ك→ک, remove ـ (tatweel) and ZWJ, keep ZWNJ
+### What’s new in version 3.0
 
-Result: clean, standard, render-ready text
+- **Add Text:** Creates the “Persian Type 0.3” RTL text at the 3D Cursor and immediately enables Persian typing.
+- **Paste:** Creates right-aligned Persian/Arabic text from the clipboard, normalizes common Arabic characters, and leaves the caret ready for continued editing.
+- **Direct Persian/Arabic editing:** Supports typing, Backspace, Delete, cursor navigation, and multiline text in Edit Mode.
+- **Text direction:** Quickly switch between RTL and LTR alignment.
+- **Font selection:** Use bundled fonts, Windows Fonts, or a custom font directory.
+- **Font appearance:** Regular/Bold, size, slant, character/word/line spacing, offset, extrusion, bevel, and curve resolution.
+- **Mesh Clean:** Converts selected Text objects to Mesh and runs the complete cleanup workflow automatically.
+- **Blender 5 support:** Requires Blender `5.0.1` or newer; the Blender `5.2 LTS` API changes have also been reviewed.
 
-Fonts (Important)
+### Installation
 
-Not all Persian fonts are made for 3D/DCC tools. For best results:
+1. Download [`persiantype-3.0.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.0/persiantype-3.0.0.zip).
+2. Open `Edit > Preferences > Get Extensions` in Blender.
+3. Choose `Install from Disk` from the menu.
+4. Select the ZIP file and enable the extension.
+5. In the 3D Viewport, press `N` and open the **Persian type** tab.
 
-Use standard, original typefaces
+### Quick start
 
-You can select from Windows Fonts (Windows only) or add a Custom Fonts Folder in Preferences
+#### Create new Persian text
 
-The addon ships with a curated, free & public-license set suitable for 3D use
+1. Click **Add Text**.
+2. A right-aligned Text Object is created at the 3D Cursor.
+3. Continue typing immediately or remove the sample with Backspace.
 
-If a font’s family name can’t be read, the filename is shown instead (that’s normal).
+#### Paste Persian or Arabic text
 
-UI at a Glance
+1. Copy Persian or Arabic text to the clipboard.
+2. Click **Paste**.
+3. The extension normalizes Arabic Yeh/Kaf, removes Tatweel and unnecessary ZWJ characters, and creates an RTL Text Object.
+4. The caret remains at the end so typing can continue immediately.
 
-Enable Persian/Arabic Text – turn on right-to-left features
+### Font controls
 
-Toggle Text Direction – switch RTL/LTR
+Select a Text Object and use **Font Settings** to:
 
-Font – addon/saved/custom fonts
+- Choose bundled, saved, custom, or Windows fonts
+- Apply Regular or Bold when a separate Bold font file is available
+- Adjust size, slant, and character/word/line spacing
+- Adjust offset, extrusion, bevel depth, bevel segments, and curve resolution
+- Restore defaults with **Reset Font Settings**
 
-Windows Fonts (Windows) – all system fonts with Apply
+> Blender 5.1 does not expose Variable Font weight axes through its Python API. Bold produces a distinct result when the selected family includes a separate Bold file.
 
-Save Current Font – bookmark the active font
+### Mesh Clean workflow
 
-Refresh – update lists after installing/adding fonts
+**Mesh Clean** accepts selected Text objects in Object Mode or Edit Mode and performs:
 
+1. Text to Mesh conversion
+2. Planar/Dissolve Decimate modifier creation and application
+3. `Mesh > Clean Up > Delete Loose`
+4. Merge by Distance at exactly `0.01401 m`
+5. Return to Object Mode
 
+Multiple selected Text Objects are supported. Font information is no longer editable after conversion, so finish font and appearance adjustments before using Mesh Clean.
 
-FAQ
+### Bundled fonts
 
-I installed a new font but don’t see it.
-Use Refresh (panel or Preferences) to rebuild the list.
+The extension includes 76 fonts. Version 3.0 adds the following open font families:
 
-My pasted text looks broken.
-Use Paste Persian (Normalize) and then pick a proper Persian font.
+- Vazirmatn
+- Estedad
+- Lalezar
+- Markazi Text
+- Noto Sans Arabic
+- Noto Naskh Arabic
+- Amiri Regular / Bold
+- Scheherazade New Regular / Bold
 
-Direction looks wrong.
-Click Toggle Text Direction (switch between RTL/LTR).
+All newly bundled fonts were tested by generating Persian geometry in Blender. Their SIL Open Font License files are included under `fonts/licenses`.
 
-Why is the font list suddenly fast?
-Windows font list is cached for speed.
+## Compatibility
 
+| Item | Support |
+| --- | --- |
+| Blender | 5.0.1 or newer |
+| Blender 5.2 LTS | API reviewed |
+| Windows | Full system-font browsing and caching |
+| Linux / macOS | Bundled fonts and custom font folders |
 
+## Version 3.0 validation
 
-Changelog
-2.0.0
+- Python compilation passed for all extension modules.
+- Blender Extension Manifest validation passed.
+- Add Text, clipboard normalization, continued Persian typing, and deletion were tested.
+- Regular/Bold font handling and appearance reset were tested.
+- The complete Text-to-Mesh cleanup workflow was tested in Blender 5.1.2.
+- All newly bundled fonts loaded and produced Persian geometry successfully.
 
-Windows Fonts cache & dropdown
+## License
 
-Custom fonts folder support
+- Persian Type source code: [GNU GPL 3.0 or later](https://www.gnu.org/licenses/gpl-3.0.html)
+- Newly bundled font families: SIL Open Font License; individual licenses are available in [`fonts/licenses`](fonts/licenses)
 
-Save Current Font in Preferences
+## Links
 
-Paste Persian (Normalize) tool
-
-Refresh buttons (panel & prefs)
-
-UX polish & speed improvements
-
-License & Credits
-
-Addon: (add your license here, e.g., MIT)
-
-Bundled fonts: free/public-license set suited for 3D
-
-
-
-
-
-افزونه Persian Type تایپ و چسباندن متن فارسی/عربی را در بلندر ساده، سریع و استاندارد می‌کند. با امکاناتی مثل حالت تایپ فارسی، چسباندن متن نرمال‌شده و انتخاب فونت از ویندوز یا پوشه دلخواه، برای هنرمندان و طراحانی که پشتیبانی کامل فارسی می‌خواهند عالی است.
-
-چرا Persian Type؟
-
-تایپ راست‌به‌چپ بدون دردسر
-
-رفع سریع به‌هم‌ریختگی متن‌های کپی‌شده (Normalize)
-
-انتخاب سریع فونت (کش ویندوز) + پوشه Custom
-
-ذخیرهٔ فونت محبوب برای استفادهٔ بعدی
-
-
-
-
-نکات برجسته نسخه 2.0
-
-⚡ باز شدن سریع لیست فونت‌ها (کش ویندوز)
-
-🖋 انتخاب فونت از Windows Fonts یا پوشهٔ دلخواه
-
-💾 Save Current Font برای نگه داشتن فونت محبوب
-
-✂️ Paste Persian (Normalize): «ي→ی»، «ك→ک»، حذف کشیده و ZWJ، حفظ ZWNJ
-
-🔄 Refresh در پنل و تنظیمات افزونه
-
-نیازمندی: بلندر 4.3.0+
-سیستم‌عامل: در ویندوز کش و کشوی Windows Fonts فعال است؛ در همهٔ سیستم‌ها می‌توانید از پوشهٔ Custom استفاده کنید.
-
-نصب
-
-فایل ZIP افزونه را دانلود کنید
-
-بلندر → Edit > Preferences > Add-ons > Install…
-
-ZIP را انتخاب و افزونه را Enable کنید
-
-N-Panel > Persian Type را باز کنید
-
-
-
-
-
-شروع سریع (گام‌به‌گام)
-
-۱) با ابزار Text یک متن بسازید → Edit Mode و متن پیش‌فرض را پاک کنید
-۲) در N-Panel > Persian Type دکمهٔ Enable Persian/Arabic Text را بزنید
-۳) Toggle Text Direction را بزنید تا جهت (RTL/LTR) و چسباندن متن درست کار کند
-۴) متن دلخواه‌تان را بنویسید و لذت ببرید
-۵) از فونت‌های افزونه/پوشهٔ دلخواه یا Windows Fonts (در ویندوز) استفاده کنید
-
-نکته: اگر از فونت فعلی راضی بودید، Save Current Font را بزنید تا همیشه دم‌دست باشد.
-
-چسباندن متن نرمال‌شده
-
-اگر متنِ کپی‌شده به‌هم ریخته است:
-
-در حالت Edit Mode روی آبجکت Text، Paste Persian (Normalize) را بزنید
-
-تبدیل‌ها: ي→ی، ك→ک، حذف ـ (کشیده) و ZWJ، حفظ ZWNJ
-
-نتیجه: متن تمیز، استاندارد، آمادهٔ رندر
-
-
-
-
-دربارهٔ فونت‌ها
-
-همهٔ فونت‌های فارسی برای فضای سه‌بعدی مناسب نیستند. برای نتیجهٔ بهتر:
-
-از فونت‌های استاندارد و اورجینال استفاده کنید
-
-می‌توانید از Windows Fonts (ویندوز) یا پوشهٔ Custom در تنظیمات استفاده کنید
-
-مجموعه‌ای از فونت‌های رایگان و عمومیِ مناسب 3D همراه افزونه قرار داده شده است
-
-اگر نام خانوادهٔ فونت نمایش داده نشد، نام فایل نشان داده می‌شود (طبیعی است).
-
-آشنایی سریع با پنل
-
-Enable Persian/Arabic Text – فعال‌سازی تایپ فارسی
-
-Toggle Text Direction – جابه‌جایی RTL/LTR
-
-Font – انتخاب فونت‌های افزونه/ذخیره/Custom
-
-Windows Fonts (ویندوز) – فونت‌های سیستم + Apply
-
-Save Current Font – ذخیرهٔ فونت فعال
-
-Refresh – به‌روزرسانی لیست‌ها
-
-
-
-
-
-پرسش‌های پرتکرار
-
-فونت جدید نصب کردم اما در لیست نیست.
-یک بار Refresh بزنید.
-
-متن چسبانده‌شده به‌هم می‌ریزد.
-از Paste Persian (Normalize) استفاده کنید و سپس یک فونت مناسب انتخاب کنید.
-
-جهت متن درست نیست.
-Toggle Text Direction را بزنید (RTL/LTR).
-
-چرا لیست فونت‌ها سریع شد؟
-به‌خاطر کش فونت‌های ویندوز.
-
-
-
-
-تغییرات
-2.0.0
-
-کش و کشوی Windows Fonts
-
-پشتیبانی از پوشهٔ فونت‌های دلخواه (Custom)
-
-Save Current Font برای دسترسی سریع
-
-ابزار Paste Persian (Normalize)
-
-دکمه‌های Refresh در پنل و تنظیمات
-
-بهبود سرعت و تجربهٔ کاربری
-
+- [Latest release](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
+- [Version 3.0 release notes](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.0)
+- [Report an issue](https://github.com/damyarpro/PERSIAN-TYPE/issues)
