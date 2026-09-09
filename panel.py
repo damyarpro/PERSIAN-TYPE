@@ -7,7 +7,7 @@ FONT_FOLDER = os.path.join(os.path.dirname(__file__), "fonts")
 # Must move together with `version` in blender_manifest.toml and the
 # bl_info["version"] tuple in __init__.py. Defined once so a version bump
 # touches a single line in this module.
-ADDON_VERSION = "3.0"
+ADDON_VERSION = "3.1"
 DEFAULT_TEXT_OBJECT_NAME = f"Persian Type {ADDON_VERSION}"
 DEFAULT_PERSIAN_TEXT = f"پرشین تایپ {ADDON_VERSION}"
 

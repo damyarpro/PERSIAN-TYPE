@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 id = "persiantype"
 name = "Persian type"
-version = "3.0.0"
+version = "3.1.0"
 tagline = "Add Persian/Arabic type directly to Blender"
 maintainer = "DAMYAR <farsayyad@gmail.com>"
 blender_version_min = "5.0.1"
@@ -12,6 +12,10 @@ type = "add-on"
 paths_exclude_pattern = [
     "__pycache__/",
     "/.git/",
+    "/.gitignore",
     "/*.zip",
-
+    # Development tooling. These are for contributors, not for users, and
+    # must never reach an installed extension.
+    "/.claude/",
+    "/CLAUDE.md",
 ]

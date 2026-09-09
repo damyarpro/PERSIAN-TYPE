@@ -31,7 +31,8 @@ extension is three Python modules plus a font folder.
 blender_manifest.toml   extension metadata + build excludes
 __init__.py             registration, preferences, modal keyboard operator
 Persiantype.py          shaping engine (pure logic, no UI)
-panel.py                operators + N-panel UI
+panel.py                operators + 3D Viewport N-panel UI
+sequencer.py            operators + Video Sequencer N-panel UI (text strips)
 fonts/                  76 bundled .ttf files
 fonts/licenses/         SIL OFL texts (redistribution requirement)
 README.md               bilingual Persian/English documentation
@@ -40,14 +41,25 @@ README.md               bilingual Persian/English documentation
 **Layering rule.** Dependencies flow in one direction only:
 
 ```
-panel.py  ──►  Persiantype.py
-__init__.py ──►  Persiantype.py
-__init__.py ──►  panel.py   (imports __classes__)
+panel.py      ──►  Persiantype.py
+sequencer.py  ──►  Persiantype.py
+__init__.py   ──►  Persiantype.py
+__init__.py   ──►  panel.py       (imports __classes__)
+__init__.py   ──►  sequencer.py   (calls its register/unregister)
 ```
 
-`Persiantype.py` must never import `panel.py` and must never build UI.
-Keep the shaping engine free of operators, panels and properties so it stays
-testable and replaceable.
+`Persiantype.py` must never import `panel.py` or `sequencer.py`, and must never
+build UI. Keep the shaping engine free of operators, panels and properties so it
+stays testable and replaceable.
+
+`panel.py` and `sequencer.py` are siblings and must not import each other. They
+are two independent front ends onto the same engine. If they need to share a
+helper, it goes into the engine or gets duplicated — a `sequencer → panel` edge
+is not allowed.
+
+`sequencer.py` owns its own class tuple and its own `register()` /
+`unregister()`, called from `__init__.py`. Do not add its classes to `panel.py`'s
+`__classes__`.
 
 ---
 
@@ -102,6 +114,28 @@ dedicated change with its own verification, never as a drive-by edit.
    call `bpy.data.fonts.load()` for every file on every redraw, bloating the
    blend file with font datablocks.
 7. **Windows-only font browsing.** The scanner depends on `%WINDIR%`.
+8. **Left-to-right runs reverse on read-back.** `unlink_text` reverses the whole
+   string, but `link_text` had deliberately kept Latin words and digit groups in
+   logical order. So `۱۲۳` returns as `۳۲۱` and `abc` as `cba`. Measured in
+   Blender 5.2, not inferred.
+
+Measured round-trip status, Blender 5.2, against the engine as it stands:
+
+| Input | Result |
+| --- | --- |
+| `لاله` (Lam-Alef) | exact |
+| `سلامی` (final Yeh) | exact |
+| two-line string | exact |
+| `می‌رود` (ZWNJ) | exact |
+| `میان` (medial Yeh) | Yeh `U+06CC` → `U+064A` |
+| `کتاب کوچک` (Keheh) | Kaf `U+06A9` → `U+FB8E` |
+| `۱۲۳ و abc` | digit and Latin runs reversed |
+
+The Yeh degradation is repaired downstream by `normalize_persian_text`, so a
+read path that normalizes afterwards survives it. Defects 1 and 8 are not
+repairable that way. Any feature that reads shaped text back into logical form
+must verify by re-shaping and comparing, and must tell the user when they differ
+rather than handing back a corrupted buffer. `sequencer.py` does this.
 
 When you touch code adjacent to one of these, leave it alone and say so.
 
@@ -258,16 +292,39 @@ mixed endings as a side effect of an unrelated change.
 - Persian text in source must use **Persian** Yeh `ی` `U+06CC` and Keheh `ک`
   `U+06A9`, never the Arabic `ي` `U+064A` / `ك` `U+0643`.
 
-### Documentation standard — README, release notes, About
+### Documentation standard — every description surface
 
-This is derived from the existing `README.md`, the `v3.0` release notes and the
-repository About text. Follow it for every one of those three surfaces. The
-`v3.0` notes are the reference example; the two older releases predate the
-standard and are not models.
+**Every description is bilingual, everywhere. No exceptions among these:**
 
-**Bilingual, Persian first.** Persian section, then English, in that order,
-under `## فارسی` and `## English`. The two halves carry the same facts. Update
-both or neither — a change to one half alone is an incomplete change.
+| Surface | Bilingual |
+| --- | --- |
+| `README.md` | yes |
+| GitHub release notes | yes |
+| Repository About / description | yes |
+| Issue descriptions | yes |
+| Pull request descriptions | yes |
+
+The `v3.0` notes are the reference example for shape; the two older releases
+predate the standard and are not models.
+
+**Persian first.** Persian section, then English, in that order, under
+`## فارسی` and `## English`. The two halves carry the same facts. Update both or
+neither — a change to one half alone is an incomplete change. Where a surface is
+too short for headings, such as the repository About line, put the Persian
+sentence first and the English sentence after it, separated by a line break or a
+`|`.
+
+**Two deliberate exceptions, both technical, not stylistic.**
+
+1. **Commit messages stay English**, per §10's first rule. They are developer
+   history, not a description a user reads.
+2. **Blender UI strings stay English** — `bl_label`, `bl_description`, panel
+   labels. Blender's own interface is English, and mixed-direction text renders
+   badly in its font system, so a bilingual tooltip degrades the product rather
+   than documenting it. This is the same reason the existing 3D panel is English.
+
+If either exception should change, it needs an explicit decision, because both
+were chosen for a reason rather than by neglect.
 
 **Never translate Blender's interface terms.** Anything the user reads inside
 Blender stays in English inside Persian prose: `Add Text`, `Paste`,

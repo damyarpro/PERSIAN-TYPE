@@ -1,4 +1,4 @@
-# Persian Type 3.0 — افزونه تایپ فارسی و عربی برای Blender
+# Persian Type 3.1 — افزونه تایپ فارسی و عربی برای Blender
 
 [![Latest Release](https://img.shields.io/github/v/release/damyarpro/PERSIAN-TYPE?label=Latest%20Release)](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
 ![Blender](https://img.shields.io/badge/Blender-5.0.1%2B-orange)
@@ -8,26 +8,27 @@
 
 Create, type, paste, style, and convert Persian or Arabic text into a clean mesh directly inside Blender.
 
-[دانلود نسخه 3.0](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.0) · [Download version 3.0](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.0)
+[دانلود نسخه 3.1](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.1) · [Download version 3.1](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.1)
 
 ---
 
 ## فارسی
 
-### قابلیت‌های اصلی نسخه 3.0
+### قابلیت‌های اصلی نسخه 3.1
 
-- **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 3.0» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
+- **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 3.1» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
 - **Paste:** خواندن متن فارسی یا عربی از Clipboard، نرمال‌سازی حروف و آماده‌سازی برای ادامه تایپ و پاک‌کردن.
 - **تایپ مستقیم فارسی و عربی:** پشتیبانی از تایپ، Backspace، Delete، حرکت مکان‌نما و خطوط چندگانه در Edit Mode.
 - **تغییر جهت متن:** جابه‌جایی سریع میان راست‌به‌چپ و چپ‌به‌راست.
 - **انتخاب فونت:** استفاده از فونت‌های همراه افزونه، فونت‌های Windows یا یک پوشه فونت سفارشی.
 - **تنظیمات ظاهر فونت:** وزن Regular/Bold، اندازه، شیب، فاصله حروف، کلمات و خطوط، Offset، Extrude، Bevel و Curve Resolution.
 - **Mesh Clean:** تبدیل Text انتخاب‌شده به Mesh و پاک‌سازی خودکار توپولوژی.
+- **پشتیبانی از Video Sequencer:** ساخت و ویرایش متن فارسی روی Text Stripها در ویرایشگر ویدیو، با تراز راست خودکار و اعمال فونت‌های همراه افزونه.
 - **سازگار با Blender 5:** حداقل نسخه موردنیاز Blender `5.0.1` است و API نسخه `5.2 LTS` نیز بررسی شده است.
 
 ### نصب
 
-1. فایل [`persiantype-3.0.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.0/persiantype-3.0.0.zip) را دانلود کنید.
+1. فایل [`persiantype-3.1.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.1/persiantype-3.1.0.zip) را دانلود کنید.
 2. در Blender وارد `Edit > Preferences > Get Extensions` شوید.
 3. از منوی بالا گزینه `Install from Disk` را انتخاب کنید.
 4. فایل ZIP را انتخاب و افزونه را فعال کنید.
@@ -78,7 +79,7 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 
 ### فونت‌های همراه
 
-افزونه دارای ۷۶ فونت است. نسخه 3.0 خانواده‌های آزاد زیر را نیز اضافه می‌کند:
+افزونه دارای ۷۶ فونت است. نسخه 3.0 خانواده‌های آزاد زیر را اضافه کرد:
 
 - Vazirmatn
 - Estedad
@@ -103,20 +104,21 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 
 ## English
 
-### What’s new in version 3.0
+### What’s new in version 3.1
 
-- **Add Text:** Creates the “Persian Type 3.0” RTL text at the 3D Cursor and immediately enables Persian typing.
+- **Add Text:** Creates the “Persian Type 3.1” RTL text at the 3D Cursor and immediately enables Persian typing.
 - **Paste:** Creates right-aligned Persian/Arabic text from the clipboard, normalizes common Arabic characters, and leaves the caret ready for continued editing.
 - **Direct Persian/Arabic editing:** Supports typing, Backspace, Delete, cursor navigation, and multiline text in Edit Mode.
 - **Text direction:** Quickly switch between RTL and LTR alignment.
 - **Font selection:** Use bundled fonts, Windows Fonts, or a custom font directory.
 - **Font appearance:** Regular/Bold, size, slant, character/word/line spacing, offset, extrusion, bevel, and curve resolution.
 - **Mesh Clean:** Converts selected Text objects to Mesh and runs the complete cleanup workflow automatically.
+- **Video Sequencer support:** Create and edit Persian text on Video Sequencer text strips, with right alignment applied automatically and the bundled fonts available on the strip.
 - **Blender 5 support:** Requires Blender `5.0.1` or newer; the Blender `5.2 LTS` API changes have also been reviewed.
 
 ### Installation
 
-1. Download [`persiantype-3.0.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.0/persiantype-3.0.0.zip).
+1. Download [`persiantype-3.1.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.1/persiantype-3.1.0.zip).
 2. Open `Edit > Preferences > Get Extensions` in Blender.
 3. Choose `Install from Disk` from the menu.
 4. Select the ZIP file and enable the extension.
@@ -163,7 +165,7 @@ Multiple selected Text Objects are supported. Font information is no longer edit
 
 ### Bundled fonts
 
-The extension includes 76 fonts. Version 3.0 adds the following open font families:
+The extension includes 76 fonts. Version 3.0 added the following open font families:
 
 - Vazirmatn
 - Estedad
@@ -185,7 +187,7 @@ All newly bundled fonts were tested by generating Persian geometry in Blender. T
 | Windows | Full system-font browsing and caching |
 | Linux / macOS | Bundled fonts and custom font folders |
 
-## Version 3.0 validation
+## Version 3.1 validation
 
 - Python compilation passed for all extension modules.
 - Blender Extension Manifest validation passed.
@@ -202,5 +204,5 @@ All newly bundled fonts were tested by generating Persian geometry in Blender. T
 ## Links
 
 - [Latest release](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
-- [Version 3.0 release notes](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.0)
+- [Version 3.1 release notes](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.1)
 - [Report an issue](https://github.com/damyarpro/PERSIAN-TYPE/issues)

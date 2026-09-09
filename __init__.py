@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Persiantype",
     "author": "DAMYAR",
-    "version": (3, 0, 0),
+    "version": (3, 1, 0),
     "blender": (5, 0, 1),
     "location": "3Dviewport, Text edit mode",
     "description": "افزونه ای برای نوشتن متن فارسی و عربی در بلندر",
@@ -15,6 +15,7 @@ import bpy
 import os
 from . import Persiantype as Ar
 from .panel import __classes__
+from . import sequencer
 from bpy.types import PropertyGroup, AddonPreferences
 from bpy.props import StringProperty, CollectionProperty, IntProperty, BoolProperty
 
@@ -444,7 +445,13 @@ def register():
     # Register paste normalize operator
     bpy.utils.register_class(PT_OT_PastePersianNormalize)
 
+    # Video Sequencer text strip support (owns its own classes)
+    sequencer.register()
+
 def unregister():
+    # Video Sequencer text strip support
+    sequencer.unregister()
+
     # Remove keyboard shortcut
     for km, kmi in keymaps:
         km.keymap_items.remove(kmi)
