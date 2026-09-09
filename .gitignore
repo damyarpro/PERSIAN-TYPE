@@ -1,5 +1,93 @@
+# ---------------------------------------------------------------------------
+# Persian Type — Blender extension
+# ---------------------------------------------------------------------------
+
+# --- Python bytecode & caches ---
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+
+# --- Build output (extension packages) ---
+# Built with: blender --command extension build
 *.zip
+build/
+dist/
+*.egg-info/
+
+# --- Blender working files & backups ---
+*.blend1
+*.blend2
+*.blend[0-9]
+*.blend@
+/*.blend
+blender_debug_output.txt
+blender_system_info.txt
+quit.blend
+
+# --- Rendered / baked output ---
+/render/
+/renders/
+/output/
+*.exr
+*.mp4
+*.mkv
+*.mov
+*.avi
+
+# --- Virtual environments & tooling ---
+.venv/
+venv/
+env/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# --- Editors & IDEs ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# --- OS cruft ---
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# --- Local secrets & machine-specific config ---
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# --- Scratch ---
+/scratch/
+/tmp/
+*.log
+*.bak
+*.orig
+*.rej
+
+# ---------------------------------------------------------------------------
+# Deliberately TRACKED (do not ignore):
+#   fonts/*.ttf            bundled font binaries ship with the extension
+#   fonts/licenses/*.txt   SIL OFL files are a redistribution requirement
+#   .claude/agents/        shared agent definitions
+#   .claude/skills/        shared project skills
+#   CLAUDE.md              project engineering rules
+# ---------------------------------------------------------------------------
