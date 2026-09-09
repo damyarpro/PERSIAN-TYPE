@@ -16,7 +16,7 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 
 ### قابلیت‌های اصلی نسخه 3.0
 
-- **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 0.3» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
+- **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 3.0» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
 - **Paste:** خواندن متن فارسی یا عربی از Clipboard، نرمال‌سازی حروف و آماده‌سازی برای ادامه تایپ و پاک‌کردن.
 - **تایپ مستقیم فارسی و عربی:** پشتیبانی از تایپ، Backspace، Delete، حرکت مکان‌نما و خطوط چندگانه در Edit Mode.
 - **تغییر جهت متن:** جابه‌جایی سریع میان راست‌به‌چپ و چپ‌به‌راست.
@@ -105,7 +105,7 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 
 ### What’s new in version 3.0
 
-- **Add Text:** Creates the “Persian Type 0.3” RTL text at the 3D Cursor and immediately enables Persian typing.
+- **Add Text:** Creates the “Persian Type 3.0” RTL text at the 3D Cursor and immediately enables Persian typing.
 - **Paste:** Creates right-aligned Persian/Arabic text from the clipboard, normalizes common Arabic characters, and leaves the caret ready for continued editing.
 - **Direct Persian/Arabic editing:** Supports typing, Backspace, Delete, cursor navigation, and multiline text in Edit Mode.
 - **Text direction:** Quickly switch between RTL and LTR alignment.

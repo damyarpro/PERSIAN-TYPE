@@ -255,10 +255,85 @@ mixed endings as a side effect of an unrelated change.
   own UI is English and mixed-direction labels render badly in its font system.
   Operator `report()` messages may be Persian where the existing code already
   is; stay consistent within a file.
-- **README:** bilingual, Persian section first, then English. Update both or
-  neither.
 - Persian text in source must use **Persian** Yeh `ی` `U+06CC` and Keheh `ک`
   `U+06A9`, never the Arabic `ي` `U+064A` / `ك` `U+0643`.
+
+### Documentation standard — README, release notes, About
+
+This is derived from the existing `README.md`, the `v3.0` release notes and the
+repository About text. Follow it for every one of those three surfaces. The
+`v3.0` notes are the reference example; the two older releases predate the
+standard and are not models.
+
+**Bilingual, Persian first.** Persian section, then English, in that order,
+under `## فارسی` and `## English`. The two halves carry the same facts. Update
+both or neither — a change to one half alone is an incomplete change.
+
+**Never translate Blender's interface terms.** Anything the user reads inside
+Blender stays in English inside Persian prose: `Add Text`, `Paste`,
+`Mesh Clean`, `Edit Mode`, `3D Cursor`, `Text Object`, `Clipboard`, `Offset`,
+`Extrude`, `Bevel`, `Curve Resolution`, `Backspace`, `Delete`. Translating them
+breaks the reader's ability to find the control.
+
+**Digits.** Latin digits for anything a machine also reads — version numbers,
+file names, paths, measurements, code: `5.0.1`, `persiantype-3.0.0.zip`,
+`0.01401 m`. Persian digits for plain counts in Persian prose: `۷۶ فونت`,
+`۱۰ فایل فونت`. A release *title* uses Persian digits in its Persian half:
+`Persian Type 3.0 | پرشین تایپ ۳.۰`.
+
+**Feature bullets name the control first, in bold.** `- **Add Text:** ساخت
+فوری متن راست‌چین…`. One line per feature, describing what the user gets, not
+how it is implemented.
+
+**The install path is fixed boilerplate.** Always
+`Edit > Preferences > Get Extensions > Install from Disk`, and always name the
+exact asset file. Do not paraphrase it.
+
+**Claims need evidence.** A `Validation` section may list only what was
+actually run, in this session, with the tool that ran it. If Blender was not
+available, the notes say so instead of asserting that tests passed. Never carry
+a validation claim forward from a previous release.
+
+**Every release note carries a Known Issues section** listing the defects in
+§4 that are still present. A release that silently ships known defects is a
+defect in the notes.
+
+### Release notes skeleton
+
+```
+Title:  Persian Type <x.y> | پرشین تایپ <x.y in Persian digits>
+
+## فارسی
+<one sentence: what this version gives the user>
+### قابلیت‌های جدید
+- <bold control name>: <what it does>
+### مشکلات شناخته‌شده
+- <open defects from §4>
+<install line naming the exact zip>
+
+## English
+<mirror of the above>
+### New features
+### Known issues
+<install line>
+
+### Validation
+<only what was actually run>
+```
+
+### Known documentation gaps
+
+Do not treat these as settled; they are open and should be raised when touching
+the surface they affect.
+
+1. **No `LICENSE` file at the repository root.** The manifest declares
+   `SPDX:GPL-3.0-or-later` and the README shows a GPL-3.0 badge, but GitHub
+   reports no detected license because the text is absent. GPL-3.0 requires the
+   license text to travel with the work.
+2. **The About text is one run-on sentence** with the maintainer email appended
+   with no separator, and the repository has no homepage and no topics set.
+3. **The `blender` and `blender5` releases put English before Persian** and
+   carry no installable zip. They predate this standard.
 
 ---
 
