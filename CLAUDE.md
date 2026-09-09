@@ -14,7 +14,7 @@ override them wherever the two disagree.
 | --- | --- |
 | Kind | Blender extension (manifest-based) + legacy `bl_info` add-on |
 | Extension id | `persiantype` |
-| Version | `3.1.0` — released; `develope` carries unreleased work |
+| Version | `3.3.0` |
 | Minimum Blender | `5.0.1` |
 | License | GPL-3.0-or-later |
 | Language | Python, `bpy` only, no third-party runtime dependencies |
@@ -75,14 +75,29 @@ Everything in this add-on follows from that.
 - `link_text()` goes logical → visual. `unlink_text()` goes visual → logical.
   `swap_lines()` repairs line order after the reversal.
 
-**Invariant.** For any logical buffer `b`:
+**Invariant.** The write path is `body = swap_lines(link_text(b))`. The read
+path is `unlink_text(swap_lines(body))`, so the full round trip is
 
 ```
-unlink_text(swap_lines(link_text(b)))  ==  b
+unlink_text(swap_lines(swap_lines(link_text(b))))  ==  b
 ```
 
-Any change to shaping must preserve this round trip **in both directions**.
-Verify manually; there is no test harness yet.
+`swap_lines` is an involution, so that reduces to `unlink_text(link_text(b))`.
+Writing the invariant with a single `swap_lines`, as this file did through 3.2,
+is wrong for multi-line input and will send you chasing failures that are an
+artefact of the formula.
+
+**The invariant does not hold for every input, and cannot.** `link_text` is not
+injective: `سلام abc.` and `سلام. abc` shape to one identical body, so no
+unshaper can choose between them. The property that actually matters, and that
+features must preserve, is re-shape stability:
+
+```
+link_text(unlink_text(body)) == body
+```
+
+If that holds, the user never sees corruption even when the recovered logical
+text differs. Measure it rather than assuming it; the harness pattern is in §7.
 
 Never write raw Persian text straight into `curve.body`, and never mutate
 `curve.body` without also updating `text_buffer` and `current_char_index`.
@@ -95,54 +110,57 @@ The two go out of sync silently and the corruption only surfaces later.
 These are real, confirmed and currently load-bearing. Fix them only in a
 dedicated change with its own verification, never as a drive-by edit.
 
-1. **Kaf does not round-trip.** `Persiantype.py:485` maps Keheh presentation
-   forms `U+FB8E..FB91` back to `'ﮎ'`, which is `U+FB8E` itself, not base
-   `'ک'` `U+06A9`.
-2. **Persian Yeh degrades to Arabic Yeh.** Initial/medial Persian Yeh shapes to
-   `U+FEF3`/`U+FEF4`, which `unlink_text` maps back to `'ي'`. `panel.py`
-   works around this by re-seeding `Ar.text_buffer` after `Ar.init()`.
-3. **Global editing state.** `text_buffer` and `current_char_index` are module
+1. **Global editing state.** `text_buffer` and `current_char_index` are module
    globals shared by every text object. Switching objects without calling
    `Ar.init()` desynchronizes the buffer.
-4. **O(n) per keystroke.** `update_text()` rewrites the entire body via
+2. **O(n) per keystroke.** `update_text()` rewrites the entire body via
    `select_all` + `delete` + `text_insert`, destroying per-character
    `body_format`. `update_visual_cursor_position()` issues `bpy.ops.font.move`
    in loops proportional to text length.
-5. **Modal never terminates.** `VIEW3D_OT_PersianTextMode._is_running` is never
+3. **Modal never terminates.** `VIEW3D_OT_PersianTextMode._is_running` is never
    reset and the modal never returns `FINISHED` or `CANCELLED`.
-6. **Font enums are expensive.** `get_font_items` and `get_windows_font_items`
-   call `bpy.data.fonts.load()` for every file on every redraw, bloating the
-   blend file with font datablocks.
-7. **Windows-only font browsing.** The scanner depends on `%WINDIR%`.
-8. **Left-to-right runs reverse on read-back.** `unlink_text` reverses the whole
-   string, but `link_text` had deliberately kept Latin words and digit groups in
-   logical order. So `۱۲۳` returns as `۳۲۱` and `abc` as `cba`. Measured in
-   Blender 5.2, not inferred.
+4. **Blender's UI cannot shape Persian.** Its font does no joining and no
+   bidi, exactly like a FONT object and a text strip. Any panel that prints
+   user Persian must feed it the shaped form, or it draws disconnected and
+   reversed. `sequencer.py` does this; the font enum labels still do not.
+5. **Font family names are filename-derived.** The enum callbacks no longer
+   load font datablocks, so a system font shows its filename stem. On Windows
+   those are terse. The full path is in each item's description.
+6. **`link_text` is not injective.** Two different logical strings can shape to
+   one identical body. This is a property of the engine, not a bug to be fixed
+   in `unlink_text`; no unshaper can recover what was never distinguishable.
+7. **Arabic Yeh folds onto Persian Yeh.** Unicode unifies the two letters'
+   initial and medial presentation forms, so the shaped form cannot say which
+   letter it came from. `unlink_text` resolves towards Persian, matching
+   `normalize_persian_text` on every ingest path. The rendered result is
+   unaffected.
 
-Measured round-trip status, Blender 5.2, against the engine as it stands:
-
-| Input | Result |
-| --- | --- |
-| `لاله` (Lam-Alef) | exact |
-| `سلامی` (final Yeh) | exact |
-| two-line string | exact |
-| `می‌رود` (ZWNJ) | exact |
-| `میان` (medial Yeh) | Yeh `U+06CC` → `U+064A` |
-| `کتاب کوچک` (Keheh) | Kaf `U+06A9` → `U+FB8E` |
-| `۱۲۳ و abc` | digit and Latin runs reversed |
-
-The Yeh degradation is repaired downstream by `normalize_persian_text`, so a
-read path that normalizes afterwards survives it. Defects 1 and 8 are not
-repairable that way. Any feature that reads shaped text back into logical form
-must verify by re-shaping and comparing, and must tell the user when they differ
-rather than handing back a corrupted buffer. `sequencer.py` does this.
+Any feature that reads shaped text back into logical form must verify by
+re-shaping and comparing, and must tell the user when the two differ rather than
+handing back a buffer that would render differently. `sequencer.py` does this.
 
 When you touch code adjacent to one of these, leave it alone and say so.
 
-**Fixed, kept here as history.** The user-facing strings in `panel.py` used to
-say `0.3` while the manifest and `bl_info` said `3.0.0`, and that disagreement
-shipped inside the `v3.0` package. `panel.py` now derives both the object name
-and the sample text from a single `ADDON_VERSION` constant.
+**Fixed, kept here as history.**
+
+- The user-facing strings in `panel.py` said `0.3` while the manifest and
+  `bl_info` said `3.0.0`, and that disagreement shipped inside `v3.0`.
+  `panel.py` now derives the object name and the sample from `ADDON_VERSION`.
+- Keheh returned as `U+FB8E` instead of base `U+06A9`; a typo hidden by two
+  glyphs that look identical in source. Fixed in 3.3.
+- Persian Yeh degraded to Arabic Yeh in medial position. Fixed in 3.3 by
+  resolving the Unicode ambiguity towards Persian; see defect 7.
+- Latin and digit runs came back reversed from `unlink_text`. Fixed in 3.3 by a
+  post-pass that reverses each maximal left-to-right run.
+- Numbers containing a separator rendered scrambled: `3.2` as `2.3`, `12:30` as
+  `30:12`, `2024/01/05` as `05/01/2024`. The digit scan advanced only over
+  digits, so a separator stopped it. Fixed in 3.3. This one was in `link_text`,
+  so it changed rendering: 639 strings in 20,020 render differently, 106 of
+  them from wrong to right and none from right to wrong.
+- The font enum callbacks loaded a datablock per file on every redraw. Fixed in
+  3.2; see defect 5 for the cost that bought.
+- System font scanning was Windows-only. Fixed in 3.2, now recursive across
+  Windows, macOS and Linux including `.ttc`.
 
 ---
 

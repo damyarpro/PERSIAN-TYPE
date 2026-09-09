@@ -43,15 +43,15 @@ A GitHub release alone is **not** a complete release.
 
 | File | Form | Current |
 |---|---|---|
-| `blender_manifest.toml` | `version = "3.0.0"` (string, SemVer) | 3.0.0 |
-| `__init__.py` | `bl_info["version"] = (3, 0, 0)` (tuple) | 3.0.0 |
-| `panel.py` | `ADDON_VERSION = "3.0"` (two-part display form) | 3.0 |
+| `blender_manifest.toml` | `version = "3.3.0"` (string, SemVer) | 3.3.0 |
+| `__init__.py` | `bl_info["version"] = (3, 3, 0)` (tuple) | 3.3.0 |
+| `panel.py` | `ADDON_VERSION = "3.3"` (two-part display form) | 3.3 |
 
 `panel.py` needs exactly one edit. `ADDON_VERSION` feeds both user-facing
 strings, so they cannot drift apart again:
 
 ```
-panel.py:10  ADDON_VERSION = "3.0"
+panel.py:10  ADDON_VERSION = "3.3"
 panel.py:11  DEFAULT_TEXT_OBJECT_NAME = f"Persian Type {ADDON_VERSION}"
 panel.py:12  DEFAULT_PERSIAN_TEXT     = f"پرشین تایپ {ADDON_VERSION}"
 ```
@@ -136,10 +136,8 @@ license section). Consequences for a release:
 - The bundled fonts stay under their own SIL OFL — OFL and GPL coexist here, and the README
   states both. Do not relicense the fonts or drop their license files.
 
-**Open gap:** there is no `LICENSE` file at the repository root. The manifest declares
-`SPDX:GPL-3.0-or-later` and the README carries a GPL-3.0 badge, but the GitHub API reports
-no detected license because the text is absent, and GPL-3.0 requires the license text to
-travel with the work. Raise this before any release; do not quietly ship around it.
+The root `LICENSE` file was added in 3.2 and ships inside the package. Keep it there; the
+GPL requires the license text to travel with the work.
 
 ## 5a. Writing the release notes
 
@@ -172,10 +170,10 @@ link.
 The README links to the release **download** by full manifest version, not by tag:
 
 ```
-https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.0/persiantype-3.0.0.zip
+https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.3/persiantype-3.3.0.zip
 ```
 
-So the tag (`v3.0`) and the asset filename (`persiantype-3.0.0.zip`) differ by design — the
+So the tag (`v3.3`) and the asset filename (`persiantype-3.3.0.zip`) differ by design — the
 asset name is whatever `extension build` produced. Update both README occurrences (Persian
 section around line 30, English around line 119), the two "download version" links near
 line 11, and the release-notes link near line 205.
