@@ -87,10 +87,32 @@ version-bearing lines, not only the badge.
 Existing tag scheme: `v3.0` is current; older releases used `blender5` and
 `blender`. Follow `vX.Y` for new tags unless told otherwise.
 
-**Never create a tag, push, or publish a release without explicit
-confirmation.** A published release is outward-facing and hard to reverse.
+## Gating — the standing rule
+
+**Never build, tag, publish, deploy or merge on your own initiative.** Each of
+those happens only when the maintainer asks for it by name, in that message.
+Approval for one release never carries over to the next.
+
+Always allowed without asking: auditing versions, checking license coverage,
+reporting drift, drafting release notes.
+
+Requires a fresh instruction: editing version strings, running
+`extension build`, creating a tag, `gh release create`, uploading an asset,
+merging into `main`.
+
 Prepare everything, show the orchestrator exactly what would be published, and
 stop there.
+
+## Two distribution channels
+
+1. **GitHub Releases** — the zip attached to a tag, which the README links to.
+2. **Blender Extensions Platform** (`extensions.blender.org`) — Blender's own
+   upload and review system, with its own submission flow and review queue. It
+   is not driven from this repository and no tool here can push to it. The
+   maintainer performs that step by hand.
+
+A GitHub release alone is not a complete release. Never describe one as if it
+were, and never imply the extension is live on Blender's platform.
 
 ## Reporting
 

@@ -179,12 +179,48 @@ Build with `blender --command extension build`, confirm the zip excludes
 against `damyarpro/PERSIAN-TYPE`. Existing tag scheme: `v3.0`, older
 `blender5`, `blender`.
 
+### Distribution channels
+
+There are **two**, and they are separate:
+
+1. **GitHub Releases** — the zip attached to a tag, for direct download and for
+   the README link.
+2. **Blender Extensions Platform** (`extensions.blender.org`) — Blender's own
+   upload and review system. It has its own submission flow, its own review
+   queue and its own versioning checks. It is not driven from this repository
+   and is not something a tool here can push to.
+
+A GitHub release is therefore **not** a complete release. Publishing to
+Blender's platform is a separate, maintainer-performed step.
+
+### Release gating — standing rule
+
+**Never build, tag, publish a release, deploy, or merge on your own initiative.
+Each of those happens only when the maintainer asks for it by name, in that
+message.**
+
+- "commit" and "push to a working branch" are ordinary work and do not need a
+  fresh instruction each time.
+- Building an extension zip, creating a tag, `gh release create`, uploading an
+  asset, merging into `main`, and anything that reaches
+  `extensions.blender.org` all require an explicit, current instruction.
+- Approval for one release never carries over to the next.
+- When a release is asked for, follow the procedure above in full. Do not
+  shorten it because a previous release went smoothly.
+
+You may always **prepare** a release without being asked: audit the version
+strings, check license coverage, draft the notes. Prepare, show the maintainer
+exactly what would be published, and stop there.
+
 ---
 
 ## 9. Branches and commits
 
-- `main` — released state. Never commit directly.
-- `develope` — integration branch for current work.
+- `main` — released state. Never commit directly, and never merge into it
+  without an explicit instruction for that merge.
+- `develope` — integration branch for current work. This is where commits and
+  pushes land by default.
+- `version3` — legacy branch, retained for history.
 - Feature work branches off `develope`.
 
 Commit messages describe the behavior change, not the file list. Do not commit

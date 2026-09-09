@@ -8,6 +8,37 @@ description: Load this skill when cutting or preparing a release of the Persian 
 Repo: `github.com/damyarpro/PERSIAN-TYPE`, working branch `develope`.
 Extension id `persiantype`, license `SPDX:GPL-3.0-or-later`, `blender_version_min = "5.0.1"`.
 
+## 0. Gating — read before doing anything here
+
+**Never build, tag, publish, deploy or merge on your own initiative.** Each of
+those happens only when the maintainer asks for it by name, in that message.
+Approval for one release never carries over to the next, and a smooth previous
+release is not permission for the current one.
+
+| Action | Needs a fresh instruction? |
+|---|---|
+| Auditing versions, licenses, drift | No — always allowed |
+| Drafting release notes | No — always allowed |
+| Editing version strings | Yes |
+| `blender --command extension build` | Yes |
+| Creating a tag, `gh release create`, uploading an asset | Yes |
+| Merging into `main` | Yes |
+| Anything reaching `extensions.blender.org` | Yes, and it is manual |
+
+You may always **prepare**: audit, verify, draft, and show the maintainer
+exactly what would be published. Then stop.
+
+### Two distribution channels
+
+1. **GitHub Releases** — the zip attached to a tag. This is what the README
+   links to.
+2. **Blender Extensions Platform** (`extensions.blender.org`) — Blender's own
+   upload and review system, with its own submission flow and review queue. It
+   is not driven from this repository and no tool here can push to it. The
+   maintainer performs that step by hand.
+
+A GitHub release alone is **not** a complete release.
+
 ## 1. Version lives in three places — update all of them
 
 | File | Form | Current |
