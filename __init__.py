@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Persiantype",
     "author": "DAMYAR",
-    "version": (3, 0, 0),
+    "version": (3, 1, 0),
     "blender": (5, 0, 1),
     "location": "3Dviewport, Text edit mode",
     "description": "افزونه ای برای نوشتن متن فارسی و عربی در بلندر",
