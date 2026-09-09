@@ -45,16 +45,20 @@ A GitHub release alone is **not** a complete release.
 |---|---|---|
 | `blender_manifest.toml` | `version = "3.0.0"` (string, SemVer) | 3.0.0 |
 | `__init__.py` | `bl_info["version"] = (3, 0, 0)` (tuple) | 3.0.0 |
-| `panel.py` | user-facing strings | **"0.3"** — stale |
+| `panel.py` | `ADDON_VERSION = "3.0"` (two-part display form) | 3.0 |
 
-`panel.py` still says `0.3` in three spots, all of which the user sees:
+`panel.py` needs exactly one edit. `ADDON_VERSION` feeds both user-facing
+strings, so they cannot drift apart again:
 
 ```
-panel.py:6    DEFAULT_PERSIAN_TEXT = "پرشین تایپ 0.3"
-panel.py:60   bpy.data.curves.new("Persian Type 0.3", 'FONT')
-panel.py:65   bpy.data.objects.new("Persian Type 0.3", curve)
-panel.py:101  bl_description = "Create Persian Type 0.3 and start typing in Persian"
+panel.py:10  ADDON_VERSION = "3.0"
+panel.py:11  DEFAULT_TEXT_OBJECT_NAME = f"Persian Type {ADDON_VERSION}"
+panel.py:12  DEFAULT_PERSIAN_TEXT     = f"پرشین تایپ {ADDON_VERSION}"
 ```
+
+Historical note: these strings said `0.3` while the manifest said `3.0.0`, and
+that disagreement shipped inside the `v3.0` package. Verify the grep below
+actually comes back empty before tagging.
 
 Also update `bl_info["blender"]` if `blender_version_min` moves. The manifest is what
 Blender 4.2+ actually reads; `bl_info` is the legacy dict kept for older loaders. They must

@@ -3,7 +3,13 @@ import os
 import re
 
 FONT_FOLDER = os.path.join(os.path.dirname(__file__), "fonts")
-DEFAULT_PERSIAN_TEXT = "پرشین تایپ 0.3"
+
+# Must move together with `version` in blender_manifest.toml and the
+# bl_info["version"] tuple in __init__.py. Defined once so a version bump
+# touches a single line in this module.
+ADDON_VERSION = "3.0"
+DEFAULT_TEXT_OBJECT_NAME = f"Persian Type {ADDON_VERSION}"
+DEFAULT_PERSIAN_TEXT = f"پرشین تایپ {ADDON_VERSION}"
 
 
 def _font_family_stem(filepath):
@@ -57,12 +63,12 @@ def create_persian_text(context, *, initial_text=DEFAULT_PERSIAN_TEXT, start_typ
     for obj in context.selected_objects:
         obj.select_set(False)
 
-    curve = bpy.data.curves.new("Persian Type 0.3", 'FONT')
+    curve = bpy.data.curves.new(DEFAULT_TEXT_OBJECT_NAME, 'FONT')
     logical_text = list(initial_text)
     curve.body = Ar.swap_lines(Ar.link_text(logical_text))
     curve.align_x = 'RIGHT'
 
-    obj = bpy.data.objects.new("Persian Type 0.3", curve)
+    obj = bpy.data.objects.new(DEFAULT_TEXT_OBJECT_NAME, curve)
     collection = context.collection or context.scene.collection
     collection.objects.link(obj)
     obj.location = context.scene.cursor.location
@@ -98,7 +104,7 @@ def create_persian_text(context, *, initial_text=DEFAULT_PERSIAN_TEXT, start_typ
 class VIEW3D_OT_AddPersianText(bpy.types.Operator):
     bl_idname = "view3d.add_persian_text"
     bl_label = "Add Text"
-    bl_description = "Create Persian Type 0.3 and start typing in Persian"
+    bl_description = "Create a Persian text object at the 3D Cursor and start typing in Persian"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod

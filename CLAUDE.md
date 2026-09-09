@@ -102,10 +102,13 @@ dedicated change with its own verification, never as a drive-by edit.
    call `bpy.data.fonts.load()` for every file on every redraw, bloating the
    blend file with font datablocks.
 7. **Windows-only font browsing.** The scanner depends on `%WINDIR%`.
-8. **Version strings disagree.** Manifest and `bl_info` say `3.0.0`; the
-   user-facing strings in `panel.py` still say `0.3`.
 
 When you touch code adjacent to one of these, leave it alone and say so.
+
+**Fixed, kept here as history.** The user-facing strings in `panel.py` used to
+say `0.3` while the manifest and `bl_info` said `3.0.0`, and that disagreement
+shipped inside the `v3.0` package. `panel.py` now derives both the object name
+and the sample text from a single `ADDON_VERSION` constant.
 
 ---
 
@@ -170,9 +173,13 @@ Report what you actually ran. If you only compiled, say you only compiled.
 
 Version lives in **three** places and they must move together:
 
-1. `blender_manifest.toml` → `version`
-2. `__init__.py` → `bl_info["version"]` tuple
-3. `panel.py` → `DEFAULT_PERSIAN_TEXT` and the created object names
+1. `blender_manifest.toml` → `version`, three-part, e.g. `"3.0.0"`
+2. `__init__.py` → `bl_info["version"]` tuple, e.g. `(3, 0, 0)`
+3. `panel.py` → `ADDON_VERSION`, two-part display form, e.g. `"3.0"`
+
+`ADDON_VERSION` feeds `DEFAULT_TEXT_OBJECT_NAME` and `DEFAULT_PERSIAN_TEXT`, so
+that module needs exactly one edit. Grep for the old version number afterwards
+to confirm nothing was missed.
 
 Build with `blender --command extension build`, confirm the zip excludes
 `__pycache__`, `.git` and other zips, then publish with `gh release create`
@@ -225,6 +232,19 @@ exactly what would be published, and stop there.
 
 Commit messages describe the behavior change, not the file list. Do not commit
 or push unless asked.
+
+### Line endings — check the diff size
+
+`panel.py`, `__init__.py` and `Persiantype.py` have **mixed** line endings in
+the repository, and `core.autocrlf` is `true` here. An editor that rewrites a
+whole file normalizes them, which turns a four-line change into a six-hundred
+line diff and buries the real edit.
+
+After editing any of the three modules, run `git --no-pager diff --stat` and
+confirm the changed-line count matches what you actually changed. If it does
+not, restore with `git checkout HEAD -- <file>` and re-apply the edit as a
+targeted byte replacement instead of a full-file rewrite. Do not "fix" the
+mixed endings as a side effect of an unrelated change.
 
 ---
 
