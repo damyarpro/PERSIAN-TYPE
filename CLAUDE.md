@@ -102,10 +102,13 @@ dedicated change with its own verification, never as a drive-by edit.
    call `bpy.data.fonts.load()` for every file on every redraw, bloating the
    blend file with font datablocks.
 7. **Windows-only font browsing.** The scanner depends on `%WINDIR%`.
-8. **Version strings disagree.** Manifest and `bl_info` say `3.0.0`; the
-   user-facing strings in `panel.py` still say `0.3`.
 
 When you touch code adjacent to one of these, leave it alone and say so.
+
+**Fixed, kept here as history.** The user-facing strings in `panel.py` used to
+say `0.3` while the manifest and `bl_info` said `3.0.0`, and that disagreement
+shipped inside the `v3.0` package. `panel.py` now derives both the object name
+and the sample text from a single `ADDON_VERSION` constant.
 
 ---
 
@@ -170,25 +173,78 @@ Report what you actually ran. If you only compiled, say you only compiled.
 
 Version lives in **three** places and they must move together:
 
-1. `blender_manifest.toml` → `version`
-2. `__init__.py` → `bl_info["version"]` tuple
-3. `panel.py` → `DEFAULT_PERSIAN_TEXT` and the created object names
+1. `blender_manifest.toml` → `version`, three-part, e.g. `"3.0.0"`
+2. `__init__.py` → `bl_info["version"]` tuple, e.g. `(3, 0, 0)`
+3. `panel.py` → `ADDON_VERSION`, two-part display form, e.g. `"3.0"`
+
+`ADDON_VERSION` feeds `DEFAULT_TEXT_OBJECT_NAME` and `DEFAULT_PERSIAN_TEXT`, so
+that module needs exactly one edit. Grep for the old version number afterwards
+to confirm nothing was missed.
 
 Build with `blender --command extension build`, confirm the zip excludes
 `__pycache__`, `.git` and other zips, then publish with `gh release create`
 against `damyarpro/PERSIAN-TYPE`. Existing tag scheme: `v3.0`, older
 `blender5`, `blender`.
 
+### Distribution channels
+
+There are **two**, and they are separate:
+
+1. **GitHub Releases** — the zip attached to a tag, for direct download and for
+   the README link.
+2. **Blender Extensions Platform** (`extensions.blender.org`) — Blender's own
+   upload and review system. It has its own submission flow, its own review
+   queue and its own versioning checks. It is not driven from this repository
+   and is not something a tool here can push to.
+
+A GitHub release is therefore **not** a complete release. Publishing to
+Blender's platform is a separate, maintainer-performed step.
+
+### Release gating — standing rule
+
+**Never build, tag, publish a release, deploy, or merge on your own initiative.
+Each of those happens only when the maintainer asks for it by name, in that
+message.**
+
+- "commit" and "push to a working branch" are ordinary work and do not need a
+  fresh instruction each time.
+- Building an extension zip, creating a tag, `gh release create`, uploading an
+  asset, merging into `main`, and anything that reaches
+  `extensions.blender.org` all require an explicit, current instruction.
+- Approval for one release never carries over to the next.
+- When a release is asked for, follow the procedure above in full. Do not
+  shorten it because a previous release went smoothly.
+
+You may always **prepare** a release without being asked: audit the version
+strings, check license coverage, draft the notes. Prepare, show the maintainer
+exactly what would be published, and stop there.
+
 ---
 
 ## 9. Branches and commits
 
-- `main` — released state. Never commit directly.
-- `develope` — integration branch for current work.
+- `main` — released state. Never commit directly, and never merge into it
+  without an explicit instruction for that merge.
+- `develope` — integration branch for current work. This is where commits and
+  pushes land by default.
+- `version3` — legacy branch, retained for history.
 - Feature work branches off `develope`.
 
 Commit messages describe the behavior change, not the file list. Do not commit
 or push unless asked.
+
+### Line endings — check the diff size
+
+`panel.py`, `__init__.py` and `Persiantype.py` have **mixed** line endings in
+the repository, and `core.autocrlf` is `true` here. An editor that rewrites a
+whole file normalizes them, which turns a four-line change into a six-hundred
+line diff and buries the real edit.
+
+After editing any of the three modules, run `git --no-pager diff --stat` and
+confirm the changed-line count matches what you actually changed. If it does
+not, restore with `git checkout HEAD -- <file>` and re-apply the edit as a
+targeted byte replacement instead of a full-file rewrite. Do not "fix" the
+mixed endings as a side effect of an unrelated change.
 
 ---
 
@@ -199,10 +255,85 @@ or push unless asked.
   own UI is English and mixed-direction labels render badly in its font system.
   Operator `report()` messages may be Persian where the existing code already
   is; stay consistent within a file.
-- **README:** bilingual, Persian section first, then English. Update both or
-  neither.
 - Persian text in source must use **Persian** Yeh `ی` `U+06CC` and Keheh `ک`
   `U+06A9`, never the Arabic `ي` `U+064A` / `ك` `U+0643`.
+
+### Documentation standard — README, release notes, About
+
+This is derived from the existing `README.md`, the `v3.0` release notes and the
+repository About text. Follow it for every one of those three surfaces. The
+`v3.0` notes are the reference example; the two older releases predate the
+standard and are not models.
+
+**Bilingual, Persian first.** Persian section, then English, in that order,
+under `## فارسی` and `## English`. The two halves carry the same facts. Update
+both or neither — a change to one half alone is an incomplete change.
+
+**Never translate Blender's interface terms.** Anything the user reads inside
+Blender stays in English inside Persian prose: `Add Text`, `Paste`,
+`Mesh Clean`, `Edit Mode`, `3D Cursor`, `Text Object`, `Clipboard`, `Offset`,
+`Extrude`, `Bevel`, `Curve Resolution`, `Backspace`, `Delete`. Translating them
+breaks the reader's ability to find the control.
+
+**Digits.** Latin digits for anything a machine also reads — version numbers,
+file names, paths, measurements, code: `5.0.1`, `persiantype-3.0.0.zip`,
+`0.01401 m`. Persian digits for plain counts in Persian prose: `۷۶ فونت`,
+`۱۰ فایل فونت`. A release *title* uses Persian digits in its Persian half:
+`Persian Type 3.0 | پرشین تایپ ۳.۰`.
+
+**Feature bullets name the control first, in bold.** `- **Add Text:** ساخت
+فوری متن راست‌چین…`. One line per feature, describing what the user gets, not
+how it is implemented.
+
+**The install path is fixed boilerplate.** Always
+`Edit > Preferences > Get Extensions > Install from Disk`, and always name the
+exact asset file. Do not paraphrase it.
+
+**Claims need evidence.** A `Validation` section may list only what was
+actually run, in this session, with the tool that ran it. If Blender was not
+available, the notes say so instead of asserting that tests passed. Never carry
+a validation claim forward from a previous release.
+
+**Every release note carries a Known Issues section** listing the defects in
+§4 that are still present. A release that silently ships known defects is a
+defect in the notes.
+
+### Release notes skeleton
+
+```
+Title:  Persian Type <x.y> | پرشین تایپ <x.y in Persian digits>
+
+## فارسی
+<one sentence: what this version gives the user>
+### قابلیت‌های جدید
+- <bold control name>: <what it does>
+### مشکلات شناخته‌شده
+- <open defects from §4>
+<install line naming the exact zip>
+
+## English
+<mirror of the above>
+### New features
+### Known issues
+<install line>
+
+### Validation
+<only what was actually run>
+```
+
+### Known documentation gaps
+
+Do not treat these as settled; they are open and should be raised when touching
+the surface they affect.
+
+1. **No `LICENSE` file at the repository root.** The manifest declares
+   `SPDX:GPL-3.0-or-later` and the README shows a GPL-3.0 badge, but GitHub
+   reports no detected license because the text is absent. GPL-3.0 requires the
+   license text to travel with the work.
+2. **The About text is one run-on sentence** with the maintainer email appended
+   with no separator, and the repository has no homepage and no topics set.
+3. **The `blender` and `blender5` releases put English before Persian** and
+   carry no installable zip. They predate this standard.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: persiantype-release
-description: Load this skill when cutting or preparing a release of the Persian Type Blender extension — bumping the version in blender_manifest.toml, the bl_info["version"] tuple in __init__.py or the user-facing "Persian Type 0.3" strings in panel.py, editing the [build] paths_exclude_pattern, building or validating the extension zip with "blender --command extension build" / "extension validate", adding or removing a font under fonts/ and its SIL OFL file under fonts/licenses/, updating the bundled-font count or the persiantype-<version>.zip download links in README.md, or publishing a tag and a GitHub release on damyarpro/PERSIAN-TYPE. Also load it for questions about the GPL-3.0-or-later obligation, the existing tag scheme (v3.0, blender5, blender), or what must never be shipped inside the zip.
+description: Load this skill when cutting or preparing a release of the Persian Type Blender extension — bumping the version in blender_manifest.toml, the bl_info["version"] tuple in __init__.py or the ADDON_VERSION constant in panel.py, editing the [build] paths_exclude_pattern, building or validating the extension zip with "blender --command extension build" / "extension validate", adding or removing a font under fonts/ and its SIL OFL file under fonts/licenses/, updating the bundled-font count or the persiantype-<version>.zip download links in README.md, or writing release notes and publishing a tag and a GitHub release on damyarpro/PERSIAN-TYPE. Also load it for the bilingual Persian-first release-notes format, the mandatory Known Issues and Validation sections, the GPL-3.0-or-later obligation and the missing root LICENSE file, the existing tag scheme (v3.0, blender5, blender), or what must never be shipped inside the zip.
 ---
 
 # Cutting a Persian Type release
@@ -8,22 +8,57 @@ description: Load this skill when cutting or preparing a release of the Persian 
 Repo: `github.com/damyarpro/PERSIAN-TYPE`, working branch `develope`.
 Extension id `persiantype`, license `SPDX:GPL-3.0-or-later`, `blender_version_min = "5.0.1"`.
 
+## 0. Gating — read before doing anything here
+
+**Never build, tag, publish, deploy or merge on your own initiative.** Each of
+those happens only when the maintainer asks for it by name, in that message.
+Approval for one release never carries over to the next, and a smooth previous
+release is not permission for the current one.
+
+| Action | Needs a fresh instruction? |
+|---|---|
+| Auditing versions, licenses, drift | No — always allowed |
+| Drafting release notes | No — always allowed |
+| Editing version strings | Yes |
+| `blender --command extension build` | Yes |
+| Creating a tag, `gh release create`, uploading an asset | Yes |
+| Merging into `main` | Yes |
+| Anything reaching `extensions.blender.org` | Yes, and it is manual |
+
+You may always **prepare**: audit, verify, draft, and show the maintainer
+exactly what would be published. Then stop.
+
+### Two distribution channels
+
+1. **GitHub Releases** — the zip attached to a tag. This is what the README
+   links to.
+2. **Blender Extensions Platform** (`extensions.blender.org`) — Blender's own
+   upload and review system, with its own submission flow and review queue. It
+   is not driven from this repository and no tool here can push to it. The
+   maintainer performs that step by hand.
+
+A GitHub release alone is **not** a complete release.
+
 ## 1. Version lives in three places — update all of them
 
 | File | Form | Current |
 |---|---|---|
 | `blender_manifest.toml` | `version = "3.0.0"` (string, SemVer) | 3.0.0 |
 | `__init__.py` | `bl_info["version"] = (3, 0, 0)` (tuple) | 3.0.0 |
-| `panel.py` | user-facing strings | **"0.3"** — stale |
+| `panel.py` | `ADDON_VERSION = "3.0"` (two-part display form) | 3.0 |
 
-`panel.py` still says `0.3` in three spots, all of which the user sees:
+`panel.py` needs exactly one edit. `ADDON_VERSION` feeds both user-facing
+strings, so they cannot drift apart again:
 
 ```
-panel.py:6    DEFAULT_PERSIAN_TEXT = "پرشین تایپ 0.3"
-panel.py:60   bpy.data.curves.new("Persian Type 0.3", 'FONT')
-panel.py:65   bpy.data.objects.new("Persian Type 0.3", curve)
-panel.py:101  bl_description = "Create Persian Type 0.3 and start typing in Persian"
+panel.py:10  ADDON_VERSION = "3.0"
+panel.py:11  DEFAULT_TEXT_OBJECT_NAME = f"Persian Type {ADDON_VERSION}"
+panel.py:12  DEFAULT_PERSIAN_TEXT     = f"پرشین تایپ {ADDON_VERSION}"
 ```
+
+Historical note: these strings said `0.3` while the manifest said `3.0.0`, and
+that disagreement shipped inside the `v3.0` package. Verify the grep below
+actually comes back empty before tagging.
 
 Also update `bl_info["blender"]` if `blender_version_min` moves. The manifest is what
 Blender 4.2+ actually reads; `bl_info` is the legacy dict kept for older loaders. They must
@@ -100,6 +135,32 @@ license section). Consequences for a release:
 - Any code copied in from elsewhere must be GPL-compatible; note its origin.
 - The bundled fonts stay under their own SIL OFL — OFL and GPL coexist here, and the README
   states both. Do not relicense the fonts or drop their license files.
+
+**Open gap:** there is no `LICENSE` file at the repository root. The manifest declares
+`SPDX:GPL-3.0-or-later` and the README carries a GPL-3.0 badge, but the GitHub API reports
+no detected license because the text is absent, and GPL-3.0 requires the license text to
+travel with the work. Raise this before any release; do not quietly ship around it.
+
+## 5a. Writing the release notes
+
+The full documentation standard is in `CLAUDE.md` §10. The parts that bite here:
+
+- **Persian first, then English**, same facts in both. The `v3.0` notes are the reference;
+  `blender` and `blender5` predate the standard and put English first — do not copy them.
+- **Title form:** `Persian Type <x.y> | پرشین تایپ <x.y in Persian digits>`.
+- **Blender UI terms stay English** inside Persian prose — `Add Text`, `Mesh Clean`,
+  `Edit Mode`, `3D Cursor`.
+- **Digits:** Latin for versions, filenames, paths and measurements (`5.0.1`,
+  `persiantype-3.0.0.zip`, `0.01401 m`); Persian digits for plain counts (`۷۶ فونت`).
+- **Install line is fixed boilerplate:** `Edit > Preferences > Get Extensions >
+  Install from Disk`, naming the exact asset.
+- **Known Issues section is mandatory**, listing the defects from `CLAUDE.md` §4 that are
+  still present. The `v3.0` notes omitted it and shipped two confirmed shaping defects
+  undocumented — do not repeat that.
+- **A `Validation` section may list only what actually ran in this session.** If Blender was
+  unavailable, say so. Never carry a validation claim forward from a previous release; the
+  `v3.0` notes assert manifest validation and Blender 5.1.2 end-to-end tests with no
+  evidence trail.
 
 ## 6. Tag and publish
 
