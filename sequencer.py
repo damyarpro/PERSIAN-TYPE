@@ -34,7 +34,10 @@ gets undo, keyframing and driver support for free, none of which an operator
 wrapper would provide.
 
 Operators use the ``pt.*`` idname prefix: ``sequencer.*`` is Blender's own
-operator namespace and must not be extended by an add-on.
+operator namespace and must not be extended by an add-on. Calling into that
+namespace is a different matter -- the text style presets below are Blender's
+own mechanism, driven by Blender's own ``sequencer.text_strip_style_preset_add``
+and ``script.execute_preset``, and nothing here reimplements them.
 """
 
 import math
@@ -59,6 +62,11 @@ from . import Persiantype as Ar
 # Sample used when a strip is created with an empty text field. Deliberately
 # carries no version number, so it cannot drift the way panel.py's sample did.
 _DEFAULT_STRIP_TEXT = "متن فارسی"
+
+# Blender registers this panel in the Properties editor header and keeps the
+# name of the active text style preset in its ``bl_label``. It is the shared
+# state the preset menu below reads and writes, not a class this add-on owns.
+_STYLE_PRESET_OWNER = "STRIP_PT_effect_text_style_presets"
 
 # Appearance values a freshly created text strip carries in Blender 5.2,
 # measured by reading a new strip rather than taken from the RNA defaults.
@@ -109,6 +117,24 @@ def _active_text_strip(context):
     if editor is None:
         return None
     strip = editor.active_strip
+    if strip is None or not isinstance(strip, bpy.types.TextStrip):
+        return None
+    return strip
+
+
+def _preset_strip(context):
+    """Return the strip Blender's preset machinery acts on, if it is a text strip.
+
+    Both ``sequencer.text_strip_style_preset_add`` and the preset files it
+    writes resolve their target through ``bpy.context.active_strip``. Measured
+    on 5.2, that context member comes from the *workspace's* sequencer scene,
+    not from ``context.scene``, and reads None while the workspace has none --
+    so it is not interchangeable with ``_active_text_strip`` and has to be
+    checked separately before the preset controls are offered.
+
+    Cheap enough for draw(): one attribute read and an isinstance test.
+    """
+    strip = getattr(context, "active_strip", None)
     if strip is None or not isinstance(strip, bpy.types.TextStrip):
         return None
     return strip
@@ -556,6 +582,60 @@ class PT_OT_SeqAddPersianStrip(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class PT_MT_text_style_presets(bpy.types.Menu):
+    """Blender's text strip style presets, surfaced in the sequencer sidebar.
+
+    Blender ships the entire mechanism -- the ``sequencer/text_style`` preset
+    directory, the add/remove operator and ``script.execute_preset`` -- but
+    only draws it in the Properties editor header, which the Video Sequencer
+    sidebar cannot reach. This menu is a second view onto that one mechanism.
+    It defines no storage, no file format and no apply logic of its own; the
+    three ``preset_*`` attributes and the inherited ``draw_preset`` are the
+    whole implementation.
+
+    The one piece of state that needs care is which preset is active. Blender
+    keeps it in the ``bl_label`` of whichever class ``script.execute_preset``
+    was invoked from, while ``remove_active`` on the add operator reads that
+    label off ``STRIP_PT_effect_text_style_presets`` specifically. A second
+    view would therefore drift out of step with Blender's own: choosing a
+    preset here would rename this class and leave Blender's showing the
+    previous one, and Remove would then delete that previous one. So the label
+    is read from Blender's class and ``post_cb`` pushes this class's back into
+    it, leaving exactly one source of truth.
+    """
+
+    bl_idname = "PT_MT_text_style_presets"
+    bl_label = "Text Style Presets"
+
+    preset_subdir = "sequencer/text_style"
+    preset_operator = "script.execute_preset"
+    preset_add_operator = "sequencer.text_strip_style_preset_add"
+
+    draw = bpy.types.Menu.draw_preset
+
+    @classmethod
+    def _owner(cls):
+        """Blender's preset panel class, or None on a build without it."""
+        return getattr(bpy.types, _STYLE_PRESET_OWNER, None)
+
+    @classmethod
+    def active_preset_name(cls):
+        """Name of the active preset, as Blender records it."""
+        return getattr(cls._owner(), "bl_label", None) or cls.bl_label
+
+    @classmethod
+    def post_cb(cls, context, filepath):
+        """Mirror the label Blender just wrote here onto Blender's own class.
+
+        Called by ``script.execute_preset`` after it has run the preset file
+        and set ``cls.bl_label`` to the chosen preset's name.
+        """
+        del context, filepath
+        owner = cls._owner()
+        if owner is not None:
+            owner.bl_label = cls.bl_label
+
+
 class SEQUENCER_PT_persiantype(bpy.types.Panel):
     bl_label = "Persian type Panel"
     bl_idname = "SEQUENCER_PT_persiantype"
@@ -567,7 +647,7 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
     def poll(cls, context):
         return getattr(context, "scene", None) is not None
 
-    def _draw_appearance(self, layout, strip):
+    def _draw_appearance(self, context, layout, strip):
         """Appearance controls, drawn straight onto the strip.
 
         Greyed out rather than hidden when there is no strip, matching the
@@ -577,6 +657,27 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         appearance = box.column()
         appearance.active = strip is not None
         appearance.label(text="Appearance", icon='SETTINGS')
+
+        preset_row = appearance.row(align=True)
+        # enabled, not just active: the add operator has no poll of its own
+        # and would raise on a None strip. It resolves its target through
+        # bpy.context.active_strip, so the presets are offered only when that
+        # names the same strip the rest of this section edits -- otherwise a
+        # preset could be saved from, or applied to, a strip not shown here.
+        # Compared with ==, not is: two reads of the same strip hand back two
+        # different bpy_struct wrappers, and only == compares what they wrap.
+        preset_row.enabled = strip is not None and _preset_strip(context) == strip
+        preset_row.menu(
+            PT_MT_text_style_presets.bl_idname,
+            text=PT_MT_text_style_presets.active_preset_name(),
+            icon='PRESET',
+        )
+        preset_row.operator(
+            "sequencer.text_strip_style_preset_add", text="", icon='ADD',
+        )
+        preset_row.operator(
+            "sequencer.text_strip_style_preset_add", text="", icon='REMOVE',
+        ).remove_active = True
 
         if strip is None:
             appearance.label(text="Select a Text strip", icon='INFO')
@@ -715,7 +816,7 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
             "pt.seq_apply_persian_font", text="Apply Font", icon='FILE_FONT',
         ).source = 'CUSTOM'
 
-        self._draw_appearance(layout, strip)
+        self._draw_appearance(context, layout, strip)
 
 
 # PT_PersianStripLine must be registered before the CollectionProperty that
@@ -733,6 +834,7 @@ __classes__ = (
     PT_OT_SeqResetAppearance,
     PT_OT_SeqApplyPersianFont,
     PT_OT_SeqAddPersianStrip,
+    PT_MT_text_style_presets,
     SEQUENCER_PT_persiantype,
 )
 
