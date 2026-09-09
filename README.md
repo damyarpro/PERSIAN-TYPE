@@ -46,6 +46,12 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 
 ### شروع سریع
 
+![پنل Persian type در 3D Viewport](docs/images/panel-3d.png)
+
+پنل سه‌بعدی در نوار کناری 3D Viewport، تب **Persian type** قرار دارد. با کلید `N` بازش کنید.
+
+علاوه بر ساخت و چسباندن متن، این پنل **Mesh Clean**، تغییر جهت متن، سه فهرست فونت، و بخش ظاهر با وزن Regular و Bold، اندازه، شیب، فاصله حروف و کلمات و خطوط، Offset، Extrude، Bevel و Curve Resolution را در اختیار می‌گذارد.
+
 #### ساخت متن جدید
 
 1. روی **Add Text** کلیک کنید.
@@ -177,6 +183,12 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 5. In the 3D Viewport, press `N` and open the **Persian type** tab.
 
 ### Quick start
+
+![The Persian type panel in the 3D Viewport](docs/images/panel-3d.png)
+
+The 3D panel lives in the 3D Viewport sidebar under the **Persian type** tab. Press `N` to open it.
+
+Beyond creating and pasting text it offers **Mesh Clean**, text direction toggling, the three font lists, and an appearance section with Regular and Bold weight, size, slant, character, word and line spacing, offset, extrusion, bevel and curve resolution.
 
 #### Create new Persian text
 
