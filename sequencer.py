@@ -51,10 +51,10 @@ from bpy.types import PropertyGroup
 
 from . import Persiantype as Ar
 
-# Deliberately not imported from panel.py: __init__ -> panel and
-# __init__ -> Persiantype are the only module edges this project allows, and a
-# sequencer -> panel edge would add a third for the sake of one path join.
-_FONT_FOLDER = os.path.join(os.path.dirname(__file__), "fonts")
+# Font path resolution lives in __init__.resolve_font_path. The bundled,
+# system and custom groups share one convention -- bundled fonts are a bare
+# filename, the other two an absolute path -- and a second copy of it here
+# would be free to drift.
 
 # Sample used when a strip is created with an empty text field. Deliberately
 # carries no version number, so it cannot drift the way panel.py's sample did.
@@ -436,35 +436,40 @@ class PT_OT_SeqApplyPersianFont(bpy.types.Operator):
     bl_idname = "pt.seq_apply_persian_font"
     bl_label = "Apply Font"
     bl_description = (
-        "Apply the selected Persian font to the active text strip. Blender's "
-        "default interface font does not render Persian"
+        "Apply the font selected in the given group to the active text strip. "
+        "Blender's default interface font does not render Persian"
     )
     bl_options = {'REGISTER', 'UNDO'}
+
+    # One operator with a group argument rather than three near-identical
+    # ones: the three groups differ only in which Scene enum they read, and
+    # resolve_font_path already knows that mapping.
+    source: EnumProperty(
+        name="Source",
+        description="Which of the three font groups to take the selection from",
+        items=(
+            ('BUNDLED', "Bundled", "Fonts shipped with the add-on"),
+            ('SYSTEM', "System", "Fonts installed in the operating system"),
+            ('CUSTOM', "Custom", "Your custom fonts folder and saved list"),
+        ),
+        default='BUNDLED',
+    )
 
     @classmethod
     def poll(cls, context):
         return _active_text_strip(context) is not None
 
     def execute(self, context):
+        from . import resolve_font_path
+
         strip = _active_text_strip(context)
         if strip is None:
             self.report({'ERROR'}, "No active text strip in the sequencer")
             return {'CANCELLED'}
 
-        selected = getattr(context.scene, "persian_font", "")
-        if not selected:
-            self.report({'ERROR'}, "No font selected in the Font dropdown")
-            return {'CANCELLED'}
-
-        # Bundled fonts are stored as a bare filename, saved and custom fonts
-        # as an absolute path. Same convention as view3d.change_persian_font.
-        if os.path.isabs(selected):
-            font_path = selected
-        else:
-            font_path = os.path.join(_FONT_FOLDER, selected)
-
-        if not os.path.exists(font_path):
-            self.report({'ERROR'}, f"Font file not found: {font_path}")
+        font_path, error = resolve_font_path(context.scene, self.source)
+        if error is not None:
+            self.report({'ERROR'}, error)
             return {'CANCELLED'}
 
         try:
@@ -678,12 +683,37 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         row.scale_y = 1.35
         row.operator("pt.seq_apply_persian_text", text="Apply to Strip", icon='CHECKMARK')
 
+        # The three font groups get three boxes, exactly as in the 3D
+        # viewport panel, so a strip can be given a bundled, a system or a
+        # custom font without the lists being mixed together.
         box = layout.box()
-        box.label(text="Font Settings:", icon='PREFERENCES')
+        box.label(text="Bundled Fonts:", icon='PREFERENCES')
         row = box.row(align=True)
         row.prop(scene, "persian_font", text="Font")
         row.operator("view3d.refresh_persian_fonts", text="", icon='FILE_REFRESH')
-        box.operator("pt.seq_apply_persian_font", text="Apply Font", icon='FILE_FONT')
+        box.operator(
+            "pt.seq_apply_persian_font", text="Apply Font", icon='FILE_FONT',
+        ).source = 'BUNDLED'
+
+        box = layout.box()
+        box.label(text="System Fonts:", icon='FILEBROWSER')
+        row = box.row(align=True)
+        row.prop(scene, "system_font", text="Font")
+        row.operator("view3d.refresh_persian_fonts", text="", icon='FILE_REFRESH')
+        row = box.row(align=True)
+        row.operator(
+            "pt.seq_apply_persian_font", text="Apply Font", icon='FILE_FONT',
+        ).source = 'SYSTEM'
+        row.operator("pt.scan_system_fonts", text="", icon='FILE_REFRESH')
+
+        box = layout.box()
+        box.label(text="Custom Fonts:", icon='FILE_FOLDER')
+        row = box.row(align=True)
+        row.prop(scene, "custom_font", text="Font")
+        row.operator("view3d.refresh_persian_fonts", text="", icon='FILE_REFRESH')
+        box.operator(
+            "pt.seq_apply_persian_font", text="Apply Font", icon='FILE_FONT',
+        ).source = 'CUSTOM'
 
         self._draw_appearance(layout, strip)
 
