@@ -14,7 +14,7 @@ override them wherever the two disagree.
 | --- | --- |
 | Kind | Blender extension (manifest-based) + legacy `bl_info` add-on |
 | Extension id | `persiantype` |
-| Version | `3.0.0` |
+| Version | `3.1.0` — released; `develope` carries unreleased work |
 | Minimum Blender | `5.0.1` |
 | License | GPL-3.0-or-later |
 | Language | Python, `bpy` only, no third-party runtime dependencies |
@@ -148,9 +148,67 @@ and the sample text from a single `ADDON_VERSION` constant.
 
 ## 5. Blender API rules
 
+### The official documentation is the reference
+
+**<https://docs.blender.org/>**
+
+Whenever you are unsure about an API, hit a wall, or a new Blender version
+changes something, read the documentation. Never answer a Blender API question
+from memory, and never guess a property, operator or enum value.
+
+| What you need | Where |
+| --- | --- |
+| Python API, current release | <https://docs.blender.org/api/current/> |
+| Python API, a specific version | `https://docs.blender.org/api/<version>/` — e.g. `.../api/5.2/` |
+| A single type | `https://docs.blender.org/api/current/bpy.types.<Type>.html` |
+| User manual | <https://docs.blender.org/manual/en/latest/> |
+
+**Fetch it with `curl`.** The site returns `403` to the WebFetch tool but `200`
+to `curl`. Verified this session on all four URL shapes above.
+
+Two faster stops before the website, in this order:
+
+1. **The bundled offline API reference.** The `mcp__Blender__search_api_docs`
+   tool does a full-text search over Blender's own RST reference with no
+   network. Fastest way to find a type or property.
+2. **A live Blender instance.** Introspecting `bl_rna.properties` on a real
+   object tells you exactly what this build exposes.
+
+### Documentation is not the same as behaviour — measure
+
+Neither the website nor RNA introspection is the final word on **values**.
+
+Measured this session on Blender 5.2: a freshly created `TextStrip` has
+`font_size` 60.0 while its RNA default says 0.0, white `color` while RNA says
+transparent black, `wrap_width` 1.0 against 0.0, `location` (0.5, 0.5) against
+the origin, and `abs_space_line` 60.0 against 1.0. A Reset built on the declared
+defaults would have set text to size zero in a transparent colour and looked
+like a rendering bug.
+
+So: the docs and introspection tell you **what exists and what it is called**.
+Only a live Blender tells you **what it actually does and what value it holds**.
+For anything behavioural, run it.
+
+### Blender is available in this environment
+
+`C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`, with 5.0 and 5.1
+alongside it. Run it headless rather than asking the maintainer to click:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python test.py
+```
+
+Stage the add-on into a temp folder, `sys.path.insert` that folder, import
+`persiantype` and call `register()` directly. Use `--factory-startup` so the
+maintainer's installed copy of this add-on does not load instead of your working
+tree. Test scripts go in the system temp directory, never in the repository.
+
+### Registration and structure
+
 - **Registration is symmetric.** Every new class goes into `__classes__` in
   `panel.py` and is unregistered in reverse order. A class registered but not
-  unregistered breaks add-on reload.
+  unregistered breaks add-on reload. `sequencer.py` keeps its own class tuple
+  and its own register/unregister pair instead.
 - **Every operator gets a `poll()`.** If it assumes an active `FONT` object or
   `EDIT` mode, `poll()` must say so. Do not discover it with an exception.
 - **Naming.** `bl_idname` is `view3d.*` for viewport operators and `pt.*` for

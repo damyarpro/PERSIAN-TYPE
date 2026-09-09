@@ -7,7 +7,7 @@ FONT_FOLDER = os.path.join(os.path.dirname(__file__), "fonts")
 # Must move together with `version` in blender_manifest.toml and the
 # bl_info["version"] tuple in __init__.py. Defined once so a version bump
 # touches a single line in this module.
-ADDON_VERSION = "3.1"
+ADDON_VERSION = "3.2"
 DEFAULT_TEXT_OBJECT_NAME = f"Persian Type {ADDON_VERSION}"
 DEFAULT_PERSIAN_TEXT = f"پرشین تایپ {ADDON_VERSION}"
 
@@ -343,99 +343,94 @@ class VIEW3D_OT_ToggleTextDirection(bpy.types.Operator):
             return {'FINISHED'}
 
 
-class VIEW3D_OT_ChangeWindowsFont(bpy.types.Operator):
-    bl_idname = "view3d.change_windows_font"
-    bl_label = "Apply Windows Font"
-    bl_description = "Apply the selected Windows font to the active text object"
+def _apply_group_font(operator, context, group, label):
+    """Apply the font selected in one of the three font groups.
+
+    Path resolution lives in __init__.resolve_font_path so the bundled /
+    system / custom convention is stated once. Loading happens here, in an
+    operator, never in the enum items callbacks that feed the dropdowns.
+    """
+    from . import resolve_font_path
+
+    text_object = context.active_object
+    if text_object is None or text_object.type != 'FONT':
+        operator.report({'WARNING'}, "Please select a text object first")
+        return {'CANCELLED'}
+
+    font_path, error = resolve_font_path(context.scene, group)
+    if error is not None:
+        operator.report({'ERROR'}, error)
+        return {'CANCELLED'}
+
+    try:
+        font = bpy.data.fonts.load(font_path, check_existing=True)
+    except (RuntimeError, OSError) as exc:
+        operator.report({'ERROR'}, f"Could not load {os.path.basename(font_path)}: {exc}")
+        return {'CANCELLED'}
+
+    text_object.data.font = font
+    operator.report({'INFO'}, f"{label} font applied: {os.path.basename(font_path)}")
+    return {'FINISHED'}
+
+
+class VIEW3D_OT_ChangeSystemFont(bpy.types.Operator):
+    bl_idname = "view3d.change_system_font"
+    bl_label = "Apply System Font"
+    bl_description = "Apply the selected operating-system font to the active text object"
     bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        # Ensure selection and active text object
-        fpath = getattr(context.scene, 'windows_font', '')
-        if not fpath:
-            self.report({'WARNING'}, "Please select a Windows font from the dropdown")
-            return {'CANCELLED'}
-        if not (context.active_object and context.active_object.type == 'FONT'):
-            self.report({'WARNING'}, "Please select a text object first")
-            return {'CANCELLED'}
-
-        # Validate path
-        if not os.path.exists(fpath):
-            self.report({'ERROR'}, "Selected font file does not exist")
-            return {'CANCELLED'}
-
-        try:
-            font = bpy.data.fonts.load(fpath, check_existing=True)
-            context.active_object.data.font = font
-            # Optional: also add to saved list in preferences
-            addon_key = __package__
-            pref_container = bpy.context.preferences.addons.get(addon_key)
-            if pref_container:
-                prefs = pref_container.preferences
-                if not any(it.path == fpath for it in prefs.saved_fonts):
-                    item = prefs.saved_fonts.add()
-                    item.name = os.path.splitext(os.path.basename(fpath))[0]
-                    item.path = fpath
-            # Refresh UI
-            for window in context.window_manager.windows:
-                for area in window.screen.areas:
-                    area.tag_redraw()
-            self.report({'INFO'}, "Windows font applied")
-            return {'FINISHED'}
-        except Exception as e:
-            self.report({'ERROR'}, f"Failed to apply font: {e}")
-            return {'CANCELLED'}
-        else:
-            self.report({'WARNING'}, "Please select a text object first")
-            return {'CANCELLED'}
 
     @classmethod
     def poll(cls, context):
-        return context.active_object and context.active_object.type == 'FONT'
+        active = context.active_object
+        return active is not None and active.type == 'FONT'
+
+    def execute(self, context):
+        return _apply_group_font(self, context, 'SYSTEM', "System")
+
+
+class VIEW3D_OT_ChangeCustomFont(bpy.types.Operator):
+    bl_idname = "view3d.change_custom_font"
+    bl_label = "Apply Custom Font"
+    bl_description = (
+        "Apply the selected font from your custom fonts folder or saved list "
+        "to the active text object"
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        active = context.active_object
+        return active is not None and active.type == 'FONT'
+
+    def execute(self, context):
+        return _apply_group_font(self, context, 'CUSTOM', "Custom")
+
 
 class VIEW3D_OT_ChangePersianFont(bpy.types.Operator):
     bl_idname = "view3d.change_persian_font"
     bl_label = "Change Font"
-    bl_description = "Apply selected font to the active text object"
+    bl_description = "Apply the selected bundled font to the active text object"
     bl_options = {'REGISTER', 'UNDO'}
-    
-    def execute(self, context):
-        # Check if there's an active text object
-        if context.active_object and context.active_object.type == 'FONT':
-            text_obj = context.active_object
-            selected = context.scene.persian_font
-            # Support both bundled fonts (relative filename) and saved absolute paths
-            if os.path.isabs(selected):
-                font_path = selected
-            else:
-                font_path = os.path.join(FONT_FOLDER, selected)
-            
-            # Check if font file exists
-            if os.path.exists(font_path):
-                # Load and apply the font
-                font = bpy.data.fonts.load(font_path, check_existing=True)
-                text_obj.data.font = font
-                self.report({'INFO'}, f"Font changed to {context.scene.persian_font}")
-                return {'FINISHED'}
-            else:
-                self.report({'ERROR'}, "Font file not found")
-                return {'CANCELLED'}
-        else:
-            self.report({'WARNING'}, "Please select a text object first")
-            return {'CANCELLED'}
-    
+
     @classmethod
     def poll(cls, context):
-        return context.active_object and context.active_object.type == 'FONT'
+        active = context.active_object
+        return active is not None and active.type == 'FONT'
 
-class VIEW3D_OT_LoadWindowsFont(bpy.types.Operator):
-    bl_idname = "view3d.load_windows_font"
-    bl_label = "Load from Windows Fonts"
-    bl_description = "Browse and apply a font from the Windows Fonts folder to the active text object"
+    def execute(self, context):
+        return _apply_group_font(self, context, 'BUNDLED', "Bundled")
+
+class VIEW3D_OT_LoadCustomFont(bpy.types.Operator):
+    bl_idname = "view3d.load_custom_font"
+    bl_label = "Load Font from Disk"
+    bl_description = (
+        "Browse for a font file, apply it to the active text object and add it "
+        "to the saved custom font list"
+    )
     bl_options = {'REGISTER', 'UNDO'}
 
     filter_glob: bpy.props.StringProperty(
-        default="*.ttf;*.otf",
+        default="*.ttf;*.otf;*.ttc",
         options={'HIDDEN'}
     )
 
@@ -444,73 +439,91 @@ class VIEW3D_OT_LoadWindowsFont(bpy.types.Operator):
         subtype='FILE_PATH'
     )
 
-    def invoke(self, context, event):
-        # Default to Windows Fonts directory if available
-        win_dir = os.environ.get('WINDIR')
-        if win_dir:
-            default_dir = os.path.join(win_dir, 'Fonts')
-        else:
-            default_dir = os.path.expanduser('~')
+    @classmethod
+    def poll(cls, context):
+        active = context.active_object
+        return active is not None and active.type == 'FONT'
 
-        # Pre-fill a path to guide the file selector
+    def invoke(self, context, event):
+        from . import system_font_roots
+
+        # Start in a font folder that exists on this platform rather than
+        # %WINDIR%, falling back to the home directory where there is none.
         if not self.filepath:
-            self.filepath = os.path.join(default_dir, "")
+            roots = system_font_roots()
+            start = roots[0] if roots else os.path.expanduser('~')
+            self.filepath = os.path.join(start, "")
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        # Validate selection
-        if not self.filepath or not os.path.exists(self.filepath):
-            self.report({'ERROR'}, "Please choose a valid font file (.ttf or .otf)")
+        from . import FONT_EXTENSIONS, invalidate_font_caches
+
+        if not self.filepath or not os.path.isfile(self.filepath):
+            self.report({'ERROR'}, "Please choose a font file")
             return {'CANCELLED'}
 
-        if not (self.filepath.lower().endswith('.ttf') or self.filepath.lower().endswith('.otf')):
-            self.report({'ERROR'}, "Unsupported file type. Choose a .ttf or .otf font file")
+        if not self.filepath.lower().endswith(FONT_EXTENSIONS):
+            self.report(
+                {'ERROR'},
+                "Unsupported file type; choose one of: " + ", ".join(FONT_EXTENSIONS),
+            )
             return {'CANCELLED'}
 
-        # Check active object
-        if not (context.active_object and context.active_object.type == 'FONT'):
+        text_object = context.active_object
+        if text_object is None or text_object.type != 'FONT':
             self.report({'WARNING'}, "Please select a text object first")
             return {'CANCELLED'}
 
-        # Load and apply
         try:
             font = bpy.data.fonts.load(self.filepath, check_existing=True)
-            context.active_object.data.font = font
-            # Save to addon preferences saved list (so it appears in the dropdown)
-            addon_key = __package__
-            pref_container = bpy.context.preferences.addons.get(addon_key)
-            if pref_container:
-                prefs = pref_container.preferences
-                exists = any(f.path == self.filepath for f in prefs.saved_fonts)
-                if not exists:
-                    item = prefs.saved_fonts.add()
-                    item.name = os.path.splitext(os.path.basename(self.filepath))[0]
-                    item.path = self.filepath
-            # Trigger UI refresh so the dropdown updates immediately
-            for window in context.window_manager.windows:
-                for area in window.screen.areas:
-                    area.tag_redraw()
-            self.report({'INFO'}, f"Applied font: {os.path.basename(self.filepath)}")
-            return {'FINISHED'}
-        except Exception as e:
-            self.report({'ERROR'}, f"Failed to load font: {e}")
+        except (RuntimeError, OSError) as exc:
+            self.report(
+                {'ERROR'},
+                f"Could not load {os.path.basename(self.filepath)}: {exc}",
+            )
             return {'CANCELLED'}
+
+        text_object.data.font = font
+
+        # A font picked by hand belongs to the Custom group, so remember it.
+        pref_container = context.preferences.addons.get(__package__ or __name__)
+        if pref_container is not None:
+            prefs = pref_container.preferences
+            if not any(item.path == self.filepath for item in prefs.saved_fonts):
+                item = prefs.saved_fonts.add()
+                item.name = os.path.splitext(os.path.basename(self.filepath))[0]
+                item.path = self.filepath
+                invalidate_font_caches('CUSTOM')
+
+        for window in context.window_manager.windows:
+            for area in window.screen.areas:
+                area.tag_redraw()
+
+        self.report({'INFO'}, f"Applied font: {os.path.basename(self.filepath)}")
+        return {'FINISHED'}
 
 
 class VIEW3D_OT_RefreshPersianFonts(bpy.types.Operator):
     bl_idname = "view3d.refresh_persian_fonts"
     bl_label = "Refresh Fonts"
-    bl_description = "Rescan and refresh the font list"
+    bl_description = "Rebuild the bundled, system and custom font lists"
     bl_options = {'INTERNAL'}
 
+    @classmethod
+    def poll(cls, context):
+        return context.window_manager is not None
+
     def execute(self, context):
-        # Tag redraw for all areas to ensure the Enum items callback is run again
+        from . import invalidate_font_caches
+
+        # Drop the cached items, then make the items callbacks run again.
+        invalidate_font_caches()
         for window in context.window_manager.windows:
             for area in window.screen.areas:
                 area.tag_redraw()
-        self.report({'INFO'}, "Font list refreshed")
+        self.report({'INFO'}, "Font lists refreshed")
         return {'FINISHED'}
 
 
@@ -519,6 +532,11 @@ class VIEW3D_OT_SaveCurrentFont(bpy.types.Operator):
     bl_label = "Save Current Font"
     bl_description = "Save the active text object's font into the saved list"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        active = context.active_object
+        return active is not None and active.type == 'FONT'
 
     def execute(self, context):
         obj = context.active_object
@@ -538,11 +556,13 @@ class VIEW3D_OT_SaveCurrentFont(bpy.types.Operator):
             sel = getattr(context.scene, 'persian_font', '')
             if sel:
                 font_path = sel if os.path.isabs(sel) else os.path.join(FONT_FOLDER, sel)
-        # Fallback 2: use current selection from windows_font enum
+        # Fallback 2: use the current System or Custom selection
         if not (font_path and os.path.isabs(font_path) and os.path.exists(font_path)):
-            win_sel = getattr(context.scene, 'windows_font', '')
-            if win_sel and os.path.isabs(win_sel):
-                font_path = win_sel
+            for property_name in ("system_font", "custom_font"):
+                candidate = getattr(context.scene, property_name, '')
+                if candidate and os.path.isabs(candidate) and os.path.exists(candidate):
+                    font_path = candidate
+                    break
         # Final validation
         if not (font_path and os.path.isabs(font_path) and os.path.exists(font_path)):
             self.report({'ERROR'}, "Current font has no valid file path to save")
@@ -559,9 +579,12 @@ class VIEW3D_OT_SaveCurrentFont(bpy.types.Operator):
         if any(item.path == font_path for item in prefs.saved_fonts):
             self.report({'INFO'}, "Font already in saved list")
         else:
+            from . import invalidate_font_caches
+
             item = prefs.saved_fonts.add()
             item.name = os.path.splitext(os.path.basename(font_path))[0]
             item.path = font_path
+            invalidate_font_caches('CUSTOM')
             self.report({'INFO'}, f"Saved font: {item.name}")
 
         # Trigger UI refresh so it appears in the dropdown
@@ -608,7 +631,7 @@ class PersiantypePanel(bpy.types.Panel):
         
         # Font Settings
         box = layout.box()
-        box.label(text="Font Settings:", icon='PREFERENCES')
+        box.label(text="Bundled Fonts:", icon='PREFERENCES')
         
         # Font List
         row = box.row(align=True)
@@ -658,19 +681,26 @@ class PersiantypePanel(bpy.types.Panel):
         else:
             appearance.label(text="Select a Text object", icon='INFO')
 
-        # Windows Fonts Section
+        # System Fonts: the operating system's own font folders. Cross-platform
+        # since 3.1; pt.scan_system_fonts refreshes the cache behind it.
         box = layout.box()
-        box.label(text="Windows Fonts:", icon='FILEBROWSER')
-        # Dropdown of Windows fonts with Apply & Refresh
+        box.label(text="System Fonts:", icon='FILEBROWSER')
         row = box.row(align=True)
-        row.prop(context.scene, "windows_font", text="Windows Font")
-        row.operator("view3d.change_windows_font", text="", icon='CHECKMARK')
+        row.prop(context.scene, "system_font", text="Font")
+        row.operator("view3d.change_system_font", text="", icon='CHECKMARK')
         row.operator("view3d.refresh_persian_fonts", text="", icon='FILE_REFRESH')
+        box.operator("pt.scan_system_fonts", text="Rescan System Fonts", icon='FILE_REFRESH')
 
-        # Load from Windows Fonts with adjacent Refresh
+        # Custom Fonts: the user's own folder plus the fonts they saved.
+        box = layout.box()
+        box.label(text="Custom Fonts:", icon='FILE_FOLDER')
         row = box.row(align=True)
-        row.operator("view3d.load_windows_font", text="Load from Windows Fonts", icon='FILE_FOLDER')
+        row.prop(context.scene, "custom_font", text="Font")
+        row.operator("view3d.change_custom_font", text="", icon='CHECKMARK')
         row.operator("view3d.refresh_persian_fonts", text="", icon='FILE_REFRESH')
+        row = box.row(align=True)
+        row.operator("view3d.load_custom_font", text="Load Font from Disk", icon='FILE_FOLDER')
+        row.operator("pt.choose_custom_fonts_dir", text="", icon='PREFERENCES')
 
 # Export all classes
 __classes__ = [
@@ -681,9 +711,10 @@ __classes__ = [
     VIEW3D_OT_ResetFontAppearance,
     VIEW3D_OT_ToggleTextDirection,
     VIEW3D_OT_ChangePersianFont,
-    VIEW3D_OT_LoadWindowsFont,
+    VIEW3D_OT_LoadCustomFont,
     VIEW3D_OT_RefreshPersianFonts,
     VIEW3D_OT_SaveCurrentFont,
-    VIEW3D_OT_ChangeWindowsFont,
+    VIEW3D_OT_ChangeSystemFont,
+    VIEW3D_OT_ChangeCustomFont,
     PersiantypePanel
 ]
