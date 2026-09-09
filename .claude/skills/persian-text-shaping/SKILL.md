@@ -33,25 +33,36 @@ Read path (re-editing an existing object): `text_buffer = list(unlink_text(body)
 
 ### Round-trip invariant
 
+The write path is `body = swap_lines(link_text(s))`; the read path is
+`unlink_text(swap_lines(body))`. So the full trip is
+
 ```
-unlink_text(swap_lines(link_text(s))) == s
+unlink_text(swap_lines(swap_lines(link_text(s)))) == s
 ```
 
-**This invariant is currently broken in two places. Do not assume it holds; fix or work
-around it deliberately.**
+`swap_lines` is an involution, so that reduces to `unlink_text(link_text(s))`. Writing it
+with a single `swap_lines` is wrong for multi-line input and will send you chasing failures
+that are an artefact of the formula.
 
-1. `Persiantype.py:485` — the Keheh branch maps `0xFB8E..0xFB91` back to the literal
-   character `'ﮎ'`, which *is* U+FB8E, a presentation form, not the base `'ک'` U+06A9.
-   Persian Kaf does not round-trip. Compare the neighbouring Gaf branch
-   (`0xFB92..0xFB95 -> 'گ'`), which is correct.
-2. Persian Yeh in initial/medial position is shaped to U+FEF3 / U+FEF4, whose `unlink_text`
-   branch returns Arabic Yeh `'ي'` U+064A, not Persian `'ی'` U+06CC. `create_persian_text`
-   in `panel.py` papers over this by re-seeding `Ar.text_buffer` by hand after `Ar.init()`
-   instead of trusting `unlink_text`. If you fix the mapping, revisit that workaround —
-   do not leave both.
+**This invariant cannot hold for every input.** `link_text` is not injective: `سلام abc.`
+and `سلام. abc` shape to one identical body, and no unshaper can choose between them.
+Arabic Yeh is a second case — Unicode unifies its initial and medial forms with Persian
+Yeh's, so `unlink_text` resolves towards Persian by design.
 
-Any edit to shaping must be checked **in both directions**: shape it, then unshape it, then
-shape it again and compare the two shaped strings byte for byte.
+**The property that actually matters is re-shape stability:**
+
+```
+link_text(unlink_text(body)) == body
+```
+
+If that holds, the user never sees corruption even when the recovered logical text differs
+from what they typed. Measure it over thousands of strings rather than asserting exact
+equality over a handful.
+
+Any edit to shaping must be checked in both directions, and any edit to `link_text` must
+additionally be diffed against the previous engine over a large corpus, because `link_text`
+is what Blender renders. Prove that every changed rendering is an improvement; strings with
+no digits and no Latin should come back byte-identical.
 
 ## Unicode ranges in play
 
