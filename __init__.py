@@ -15,6 +15,7 @@ import bpy
 import os
 from . import Persiantype as Ar
 from .panel import __classes__
+from . import sequencer
 from bpy.types import PropertyGroup, AddonPreferences
 from bpy.props import StringProperty, CollectionProperty, IntProperty, BoolProperty
 
@@ -444,7 +445,13 @@ def register():
     # Register paste normalize operator
     bpy.utils.register_class(PT_OT_PastePersianNormalize)
 
+    # Video Sequencer text strip support (owns its own classes)
+    sequencer.register()
+
 def unregister():
+    # Video Sequencer text strip support
+    sequencer.unregister()
+
     # Remove keyboard shortcut
     for km, kmi in keymaps:
         km.keymap_items.remove(kmi)

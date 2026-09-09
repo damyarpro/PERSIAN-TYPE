@@ -31,7 +31,8 @@ extension is three Python modules plus a font folder.
 blender_manifest.toml   extension metadata + build excludes
 __init__.py             registration, preferences, modal keyboard operator
 Persiantype.py          shaping engine (pure logic, no UI)
-panel.py                operators + N-panel UI
+panel.py                operators + 3D Viewport N-panel UI
+sequencer.py            operators + Video Sequencer N-panel UI (text strips)
 fonts/                  76 bundled .ttf files
 fonts/licenses/         SIL OFL texts (redistribution requirement)
 README.md               bilingual Persian/English documentation
@@ -40,14 +41,25 @@ README.md               bilingual Persian/English documentation
 **Layering rule.** Dependencies flow in one direction only:
 
 ```
-panel.py  ──►  Persiantype.py
-__init__.py ──►  Persiantype.py
-__init__.py ──►  panel.py   (imports __classes__)
+panel.py      ──►  Persiantype.py
+sequencer.py  ──►  Persiantype.py
+__init__.py   ──►  Persiantype.py
+__init__.py   ──►  panel.py       (imports __classes__)
+__init__.py   ──►  sequencer.py   (calls its register/unregister)
 ```
 
-`Persiantype.py` must never import `panel.py` and must never build UI.
-Keep the shaping engine free of operators, panels and properties so it stays
-testable and replaceable.
+`Persiantype.py` must never import `panel.py` or `sequencer.py`, and must never
+build UI. Keep the shaping engine free of operators, panels and properties so it
+stays testable and replaceable.
+
+`panel.py` and `sequencer.py` are siblings and must not import each other. They
+are two independent front ends onto the same engine. If they need to share a
+helper, it goes into the engine or gets duplicated — a `sequencer → panel` edge
+is not allowed.
+
+`sequencer.py` owns its own class tuple and its own `register()` /
+`unregister()`, called from `__init__.py`. Do not add its classes to `panel.py`'s
+`__classes__`.
 
 ---
 
@@ -102,6 +114,28 @@ dedicated change with its own verification, never as a drive-by edit.
    call `bpy.data.fonts.load()` for every file on every redraw, bloating the
    blend file with font datablocks.
 7. **Windows-only font browsing.** The scanner depends on `%WINDIR%`.
+8. **Left-to-right runs reverse on read-back.** `unlink_text` reverses the whole
+   string, but `link_text` had deliberately kept Latin words and digit groups in
+   logical order. So `۱۲۳` returns as `۳۲۱` and `abc` as `cba`. Measured in
+   Blender 5.2, not inferred.
+
+Measured round-trip status, Blender 5.2, against the engine as it stands:
+
+| Input | Result |
+| --- | --- |
+| `لاله` (Lam-Alef) | exact |
+| `سلامی` (final Yeh) | exact |
+| two-line string | exact |
+| `می‌رود` (ZWNJ) | exact |
+| `میان` (medial Yeh) | Yeh `U+06CC` → `U+064A` |
+| `کتاب کوچک` (Keheh) | Kaf `U+06A9` → `U+FB8E` |
+| `۱۲۳ و abc` | digit and Latin runs reversed |
+
+The Yeh degradation is repaired downstream by `normalize_persian_text`, so a
+read path that normalizes afterwards survives it. Defects 1 and 8 are not
+repairable that way. Any feature that reads shaped text back into logical form
+must verify by re-shaping and comparing, and must tell the user when they differ
+rather than handing back a corrupted buffer. `sequencer.py` does this.
 
 When you touch code adjacent to one of these, leave it alone and say so.
 
