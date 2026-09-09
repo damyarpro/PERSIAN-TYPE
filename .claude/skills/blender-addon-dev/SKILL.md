@@ -8,6 +8,39 @@ description: Load this skill for any change to the Blender integration layer of 
 Target: Blender 4.2+ extension format, `blender_version_min = "5.0.1"`. `bpy` cannot be
 imported outside Blender, so nothing here is verifiable by running the module directly.
 
+## Look it up — never guess an API
+
+**<https://docs.blender.org/>** is the reference. Consult it whenever you are unsure,
+whenever you are stuck, and whenever a new Blender version may have changed something.
+
+| Need | URL |
+| --- | --- |
+| Python API, current | <https://docs.blender.org/api/current/> |
+| Python API, pinned | `https://docs.blender.org/api/<version>/` |
+| One type | `https://docs.blender.org/api/current/bpy.types.<Type>.html` |
+| User manual | <https://docs.blender.org/manual/en/latest/> |
+
+Fetch with `curl`. The site answers `403` to the WebFetch tool and `200` to `curl`.
+
+Check these first, they are faster:
+
+1. `mcp__Blender__search_api_docs` — full-text search of the bundled offline RST reference,
+   no network.
+2. A live Blender: introspect `bl_rna.properties` on a real datablock.
+
+**Docs describe the API. Only a running Blender tells you the values.** Measured on 5.2, a
+fresh `TextStrip` reports `font_size` 60.0 where RNA declares 0.0, and white `color` where
+RNA declares transparent black. Code built on declared defaults shipped-broken would have
+rendered invisible text. For anything behavioural, run it:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background --factory-startup --python test.py
+```
+
+Use `--factory-startup` so the maintainer's installed copy does not load instead of your
+working tree. Stage the add-on to a temp dir, `sys.path.insert` it, `import persiantype`,
+call `register()`.
+
 ## Registration chain
 
 ```
