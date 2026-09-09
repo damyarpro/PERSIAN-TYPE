@@ -292,16 +292,39 @@ mixed endings as a side effect of an unrelated change.
 - Persian text in source must use **Persian** Yeh `ی` `U+06CC` and Keheh `ک`
   `U+06A9`, never the Arabic `ي` `U+064A` / `ك` `U+0643`.
 
-### Documentation standard — README, release notes, About
+### Documentation standard — every description surface
 
-This is derived from the existing `README.md`, the `v3.0` release notes and the
-repository About text. Follow it for every one of those three surfaces. The
-`v3.0` notes are the reference example; the two older releases predate the
-standard and are not models.
+**Every description is bilingual, everywhere. No exceptions among these:**
 
-**Bilingual, Persian first.** Persian section, then English, in that order,
-under `## فارسی` and `## English`. The two halves carry the same facts. Update
-both or neither — a change to one half alone is an incomplete change.
+| Surface | Bilingual |
+| --- | --- |
+| `README.md` | yes |
+| GitHub release notes | yes |
+| Repository About / description | yes |
+| Issue descriptions | yes |
+| Pull request descriptions | yes |
+
+The `v3.0` notes are the reference example for shape; the two older releases
+predate the standard and are not models.
+
+**Persian first.** Persian section, then English, in that order, under
+`## فارسی` and `## English`. The two halves carry the same facts. Update both or
+neither — a change to one half alone is an incomplete change. Where a surface is
+too short for headings, such as the repository About line, put the Persian
+sentence first and the English sentence after it, separated by a line break or a
+`|`.
+
+**Two deliberate exceptions, both technical, not stylistic.**
+
+1. **Commit messages stay English**, per §10's first rule. They are developer
+   history, not a description a user reads.
+2. **Blender UI strings stay English** — `bl_label`, `bl_description`, panel
+   labels. Blender's own interface is English, and mixed-direction text renders
+   badly in its font system, so a bilingual tooltip degrades the product rather
+   than documenting it. This is the same reason the existing 3D panel is English.
+
+If either exception should change, it needs an explicit decision, because both
+were chosen for a reason rather than by neglect.
 
 **Never translate Blender's interface terms.** Anything the user reads inside
 Blender stays in English inside Persian prose: `Add Text`, `Paste`,
