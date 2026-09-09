@@ -5,15 +5,18 @@ HarfBuzz shaping and no bidi algorithm. It differs from a FONT object in one
 decisive way -- it has no Edit Mode and no caret -- so the modal live-typing
 model of ``VIEW3D_OT_PersianTextMode`` does not transfer.
 
-This module therefore uses a field-and-apply model:
+This module therefore uses a field-and-apply model. The editable field is a
+collection of lines rather than one string, because a strip's text is routinely
+multi-line and Blender's single-line ``StringProperty`` widget cannot enter a
+newline:
 
-    Scene.persian_strip_text   logical Persian text, in reading order
-              |  Apply         strip.text = swap_lines(link_text(logical))
+    Scene.persian_strip_lines  logical Persian text, one entry per line
+              |  Apply         strip.text = swap_lines(link_text("\\n".join(...)))
               v
     TextStrip.text             presentation forms, visually reversed
               |  Load          logical = unlink_text(swap_lines(strip.text))
-              v
-    Scene.persian_strip_text
+              v                          then split back on "\\n"
+    Scene.persian_strip_lines
 
 The shaping engine is the single source of truth for both directions; nothing
 here reimplements shaping. The read-back direction is lossy -- measured against
@@ -25,14 +28,26 @@ re-shapes what it read and warns when the result does not match the strip's
 current text, instead of silently handing back a corrupted buffer. Nothing here
 tries to repair the engine.
 
+Appearance properties are drawn straight onto the strip with ``layout.prop``.
+That is deliberate: direct property editing is what Blender users expect, and it
+gets undo, keyframing and driver support for free, none of which an operator
+wrapper would provide.
+
 Operators use the ``pt.*`` idname prefix: ``sequencer.*`` is Blender's own
 operator namespace and must not be extended by an add-on.
 """
 
+import math
 import os
 
 import bpy
-from bpy.props import StringProperty
+from bpy.props import (
+    CollectionProperty,
+    EnumProperty,
+    IntProperty,
+    StringProperty,
+)
+from bpy.types import PropertyGroup
 
 from . import Persiantype as Ar
 
@@ -44,6 +59,42 @@ _FONT_FOLDER = os.path.join(os.path.dirname(__file__), "fonts")
 # Sample used when a strip is created with an empty text field. Deliberately
 # carries no version number, so it cannot drift the way panel.py's sample did.
 _DEFAULT_STRIP_TEXT = "متن فارسی"
+
+# Appearance values a freshly created text strip carries in Blender 5.2,
+# measured by reading a new strip rather than taken from the RNA defaults.
+# The two disagree and the RNA is the wrong one to trust here: RNA reports
+# font_size 0.0, location (0, 0) and a fully transparent black colour, none of
+# which a new strip actually has.
+#
+# alignment_x and anchor_x deviate from Blender on purpose. A new strip is
+# CENTER on both; right alignment is the entire point of this add-on, so Reset
+# restores the add-on's baseline rather than Blender's.
+_STRIP_APPEARANCE_DEFAULTS = (
+    ("font_size", 60.0),
+    ("location", (0.5, 0.5)),
+    ("wrap_width", 1.0),
+    ("space_line", 1.0),
+    ("use_absolute_line_spacing", False),
+    ("abs_space_line", 60.0),
+    ("color", (1.0, 1.0, 1.0, 1.0)),
+    ("use_bold", False),
+    ("use_italic", False),
+    ("alignment_x", 'RIGHT'),
+    ("anchor_x", 'RIGHT'),
+    ("anchor_y", 'CENTER'),
+    ("use_shadow", False),
+    ("shadow_color", (0.0, 0.0, 0.0, 0.7)),
+    ("shadow_angle", math.radians(65.0)),
+    ("shadow_offset", 0.04),
+    ("shadow_blur", 0.0),
+    ("use_outline", False),
+    ("outline_color", (0.0, 0.0, 0.0, 0.7)),
+    ("outline_width", 0.05),
+    ("use_box", False),
+    ("box_color", (0.2, 0.2, 0.2, 0.7)),
+    ("box_margin", 0.01),
+    ("box_roundness", 0.0),
+)
 
 
 def _active_text_strip(context):
@@ -73,12 +124,143 @@ def _unshape(shaped_text):
     return ''.join(Ar.unlink_text(Ar.swap_lines(shaped_text)))
 
 
+def _joined_lines(scene):
+    """The line collection as one logical string, newline separated."""
+    return "\n".join(line.text for line in scene.persian_strip_lines)
+
+
+def _replace_lines(scene, logical_text):
+    """Rebuild the line collection from a logical string.
+
+    CR is folded into LF first. Clipboard text on Windows arrives CRLF
+    separated, and a stray CR left on the end of a line would be handed to the
+    shaping engine as an ordinary character.
+    """
+    flattened = logical_text.replace("\r\n", "\n").replace("\r", "\n")
+    lines = scene.persian_strip_lines
+    lines.clear()
+    for chunk in flattened.split("\n"):
+        lines.add().text = chunk
+    scene.persian_strip_lines_index = 0
+    return len(lines)
+
+
+class PT_PersianStripLine(PropertyGroup):
+    """One line of the logical Persian text destined for a strip."""
+
+    text: StringProperty(
+        name="Line",
+        description="One line of Persian/Arabic text, in logical reading order",
+        default="",
+    )
+
+
+class PT_UL_persian_strip_lines(bpy.types.UIList):
+    """Editable list of text lines.
+
+    Each row is an editable field rather than a label, so the list itself is
+    the multi-line editor; no popup or separate edit step is needed.
+    """
+
+    def draw_item(self, context, layout, data, item, icon,
+                  active_data, active_propname, index):
+        row = layout.row(align=True)
+        sub = row.row()
+        sub.scale_x = 0.22
+        sub.label(text=str(index + 1))
+        row.prop(item, "text", text="", emboss=False)
+
+
+class PT_OT_SeqLineAdd(bpy.types.Operator):
+    bl_idname = "pt.seq_line_add"
+    bl_label = "Add Line"
+    bl_description = "Add an empty line below the selected line"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return getattr(context, "scene", None) is not None
+
+    def execute(self, context):
+        lines = context.scene.persian_strip_lines
+        lines.add()
+        context.scene.persian_strip_lines_index = len(lines) - 1
+        return {'FINISHED'}
+
+
+class PT_OT_SeqLineRemove(bpy.types.Operator):
+    bl_idname = "pt.seq_line_remove"
+    bl_label = "Remove Line"
+    bl_description = "Remove the selected line"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        scene = getattr(context, "scene", None)
+        return scene is not None and len(scene.persian_strip_lines) > 0
+
+    def execute(self, context):
+        scene = context.scene
+        lines = scene.persian_strip_lines
+        index = scene.persian_strip_lines_index
+        if not 0 <= index < len(lines):
+            self.report({'ERROR'}, f"No line selected at index {index}")
+            return {'CANCELLED'}
+
+        lines.remove(index)
+        scene.persian_strip_lines_index = max(0, min(index, len(lines) - 1))
+        return {'FINISHED'}
+
+
+class PT_OT_SeqLineMove(bpy.types.Operator):
+    bl_idname = "pt.seq_line_move"
+    bl_label = "Move Line"
+    bl_description = "Move the selected line up or down"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    direction: EnumProperty(
+        name="Direction",
+        description="Direction to move the selected line in",
+        items=(
+            ('UP', "Up", "Move the line one position earlier"),
+            ('DOWN', "Down", "Move the line one position later"),
+        ),
+        default='UP',
+    )
+
+    @classmethod
+    def poll(cls, context):
+        scene = getattr(context, "scene", None)
+        return scene is not None and len(scene.persian_strip_lines) > 1
+
+    def execute(self, context):
+        scene = context.scene
+        lines = scene.persian_strip_lines
+        index = scene.persian_strip_lines_index
+        if not 0 <= index < len(lines):
+            self.report({'ERROR'}, f"No line selected at index {index}")
+            return {'CANCELLED'}
+
+        target = index - 1 if self.direction == 'UP' else index + 1
+        if not 0 <= target < len(lines):
+            self.report(
+                {'ERROR'},
+                "The selected line is already at the "
+                + ("top" if self.direction == 'UP' else "bottom"),
+            )
+            return {'CANCELLED'}
+
+        lines.move(index, target)
+        scene.persian_strip_lines_index = target
+        return {'FINISHED'}
+
+
 class PT_OT_SeqPastePersianText(bpy.types.Operator):
     bl_idname = "pt.seq_paste_persian_text"
     bl_label = "Paste"
     bl_description = (
-        "Paste the clipboard into the Persian text field with normalization "
-        "(Arabic Yeh/Kaf to Persian, remove Kashida and ZWJ)"
+        "Replace the line list with the clipboard, normalized (Arabic Yeh/Kaf "
+        "to Persian, remove Kashida and ZWJ) and split into one entry per line"
     )
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -94,8 +276,8 @@ class PT_OT_SeqPastePersianText(bpy.types.Operator):
             self.report({'ERROR'}, "Clipboard is empty")
             return {'CANCELLED'}
 
-        context.scene.persian_strip_text = normalize_persian_text(clipboard)
-        self.report({'INFO'}, "Clipboard pasted into the Persian text field")
+        count = _replace_lines(context.scene, normalize_persian_text(clipboard))
+        self.report({'INFO'}, f"Clipboard pasted into {count} line(s)")
         return {'FINISHED'}
 
 
@@ -103,9 +285,9 @@ class PT_OT_SeqLoadPersianText(bpy.types.Operator):
     bl_idname = "pt.seq_load_persian_text"
     bl_label = "Load from Strip"
     bl_description = (
-        "Read the active text strip back into the Persian text field for "
-        "editing. Keheh and left-to-right runs do not round-trip exactly; "
-        "you are warned when they do not"
+        "Read the active text strip back into the line list for editing, one "
+        "entry per line. Keheh and left-to-right runs do not round-trip "
+        "exactly; you are warned when they do not"
     )
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -130,18 +312,18 @@ class PT_OT_SeqLoadPersianText(bpy.types.Operator):
         # degradation; it cannot repair the Keheh defect, which is why the
         # result is checked against the original below rather than trusted.
         logical = normalize_persian_text(_unshape(shaped))
-        context.scene.persian_strip_text = logical
+        count = _replace_lines(context.scene, logical)
 
         if _shape(logical) != shaped:
             self.report(
                 {'WARNING'},
                 "Loaded text does not re-shape to the strip's current text. "
                 "Keheh returns as a presentation form and Latin or digit runs "
-                "return reversed. Fix the field before applying",
+                "return reversed. Fix the lines before applying",
             )
             return {'FINISHED'}
 
-        self.report({'INFO'}, "Strip text loaded into the Persian text field")
+        self.report({'INFO'}, f"Strip text loaded into {count} line(s)")
         return {'FINISHED'}
 
 
@@ -149,7 +331,7 @@ class PT_OT_SeqApplyPersianText(bpy.types.Operator):
     bl_idname = "pt.seq_apply_persian_text"
     bl_label = "Apply to Strip"
     bl_description = (
-        "Shape the Persian text field and write it into the active text "
+        "Join the lines, shape them and write the result into the active text "
         "strip, anchored and aligned right so it reads right-to-left"
     )
     bl_options = {'REGISTER', 'UNDO'}
@@ -166,16 +348,20 @@ class PT_OT_SeqApplyPersianText(bpy.types.Operator):
             self.report({'ERROR'}, "No active text strip in the sequencer")
             return {'CANCELLED'}
 
-        logical = context.scene.persian_strip_text
-        if not logical:
-            self.report({'ERROR'}, "The Persian text field is empty")
-            return {'CANCELLED'}
+        scene = context.scene
+        # Lines can be typed or pasted into directly, bypassing the paste
+        # operator, so normalize in place. Normalization never adds or removes
+        # a newline, so this cannot change the line count or disturb the
+        # selected row.
+        for line in scene.persian_strip_lines:
+            normalized = normalize_persian_text(line.text)
+            if normalized != line.text:
+                line.text = normalized
 
-        # The field can be edited or pasted into directly, bypassing the paste
-        # operator, so normalize here too and store the normalized form back so
-        # field and strip stay in step.
-        logical = normalize_persian_text(logical)
-        context.scene.persian_strip_text = logical
+        logical = _joined_lines(scene)
+        if not logical.strip():
+            self.report({'ERROR'}, "The line list is empty")
+            return {'CANCELLED'}
 
         strip.text = _shape(logical)
 
@@ -195,7 +381,54 @@ class PT_OT_SeqApplyPersianText(bpy.types.Operator):
             )
             return {'FINISHED'}
 
-        self.report({'INFO'}, "Persian text applied to the active strip")
+        self.report(
+            {'INFO'},
+            f"Applied {len(scene.persian_strip_lines)} line(s) to the active strip",
+        )
+        return {'FINISHED'}
+
+
+class PT_OT_SeqResetAppearance(bpy.types.Operator):
+    bl_idname = "pt.seq_reset_appearance"
+    bl_label = "Reset Appearance"
+    bl_description = (
+        "Restore size, placement, spacing, style, shadow, outline and box to "
+        "the values a new text strip carries. Alignment and anchor stay on "
+        "the right, which is this add-on's baseline"
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return _active_text_strip(context) is not None
+
+    def execute(self, context):
+        strip = _active_text_strip(context)
+        if strip is None:
+            self.report({'ERROR'}, "No active text strip in the sequencer")
+            return {'CANCELLED'}
+
+        applied = 0
+        missing = []
+        for prop_name, value in _STRIP_APPEARANCE_DEFAULTS:
+            if not hasattr(strip, prop_name):
+                missing.append(prop_name)
+                continue
+            setattr(strip, prop_name, value)
+            applied += 1
+
+        if missing:
+            self.report(
+                {'WARNING'},
+                f"Reset {applied} appearance setting(s); this Blender build "
+                "has no " + ", ".join(missing) + " on text strips",
+            )
+            return {'FINISHED'}
+
+        self.report(
+            {'INFO'},
+            f"Reset {applied} appearance settings, alignment and anchor kept right",
+        )
         return {'FINISHED'}
 
 
@@ -250,11 +483,11 @@ class PT_OT_SeqAddPersianStrip(bpy.types.Operator):
     bl_label = "Add Text Strip"
     bl_description = (
         "Create a text strip at the current frame, already right-aligned and "
-        "carrying the Persian text field, then make it the active strip"
+        "carrying the Persian text lines, then make it the active strip"
     )
     bl_options = {'REGISTER', 'UNDO'}
 
-    length: bpy.props.IntProperty(
+    length: IntProperty(
         name="Length",
         description="Strip length in frames",
         default=50,
@@ -293,8 +526,10 @@ class PT_OT_SeqAddPersianStrip(bpy.types.Operator):
             self.report({'ERROR'}, f"Could not create the text strip: {exc}")
             return {'CANCELLED'}
 
-        logical = scene.persian_strip_text or _DEFAULT_STRIP_TEXT
-        scene.persian_strip_text = logical
+        logical = _joined_lines(scene)
+        if not logical.strip():
+            logical = _DEFAULT_STRIP_TEXT
+            _replace_lines(scene, logical)
         strip.text = _shape(logical)
 
         # Guarded the same way as the Apply operator: a build without these
@@ -327,8 +562,84 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
     def poll(cls, context):
         return getattr(context, "scene", None) is not None
 
+    def _draw_appearance(self, layout, strip):
+        """Appearance controls, drawn straight onto the strip.
+
+        Greyed out rather than hidden when there is no strip, matching the
+        Appearance box in the 3D viewport panel.
+        """
+        box = layout.box()
+        appearance = box.column()
+        appearance.active = strip is not None
+        appearance.label(text="Appearance", icon='SETTINGS')
+
+        if strip is None:
+            appearance.label(text="Select a Text strip", icon='INFO')
+            return
+
+        col = appearance.column(align=True)
+        col.prop(strip, "font_size", text="Size")
+        col.prop(strip, "location", text="Location")
+        col.prop(strip, "wrap_width", text="Wrap Width")
+
+        col = appearance.column(align=True)
+        col.prop(strip, "use_absolute_line_spacing", text="Absolute Line Spacing")
+        # The two spacing properties are mutually exclusive in Blender's own
+        # renderer, so only the one in effect is shown.
+        if strip.use_absolute_line_spacing:
+            col.prop(strip, "abs_space_line", text="Line Spacing")
+        else:
+            col.prop(strip, "space_line", text="Line Spacing")
+
+        col = appearance.column(align=True)
+        col.prop(strip, "color", text="Color")
+        row = col.row(align=True)
+        row.prop(strip, "use_bold", text="Bold", toggle=True)
+        row.prop(strip, "use_italic", text="Italic", toggle=True)
+        # Blender fakes both by transforming the regular face; neither loads a
+        # real bold or italic file, and Persian letterforms suffer badly for
+        # it. The RNA tooltip belongs to Blender and cannot say so, so the
+        # panel does.
+        col.label(text="Bold/Italic are synthetic, not real faces", icon='INFO')
+
+        col = appearance.column(align=True)
+        col.prop(strip, "alignment_x", text="Alignment X")
+        col.prop(strip, "anchor_x", text="Anchor X")
+        col.prop(strip, "anchor_y", text="Anchor Y")
+
+        col = appearance.column(align=True)
+        col.prop(strip, "use_shadow", text="Shadow")
+        if strip.use_shadow:
+            sub = col.column(align=True)
+            sub.prop(strip, "shadow_color", text="Shadow Color")
+            sub.prop(strip, "shadow_angle", text="Shadow Angle")
+            sub.prop(strip, "shadow_offset", text="Shadow Offset")
+            sub.prop(strip, "shadow_blur", text="Shadow Blur")
+
+        col = appearance.column(align=True)
+        col.prop(strip, "use_outline", text="Outline")
+        if strip.use_outline:
+            sub = col.column(align=True)
+            sub.prop(strip, "outline_color", text="Outline Color")
+            sub.prop(strip, "outline_width", text="Outline Width")
+
+        col = appearance.column(align=True)
+        col.prop(strip, "use_box", text="Box")
+        if strip.use_box:
+            sub = col.column(align=True)
+            sub.prop(strip, "box_color", text="Box Color")
+            sub.prop(strip, "box_margin", text="Box Margin")
+            sub.prop(strip, "box_roundness", text="Box Roundness")
+
+        appearance.operator(
+            "pt.seq_reset_appearance",
+            text="Reset Appearance",
+            icon='LOOP_BACK',
+        )
+
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
         strip = _active_text_strip(context)
 
         row = layout.row()
@@ -342,7 +653,22 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         else:
             box.label(text=strip.name, icon='SEQ_STRIP_DUPLICATE')
 
-        box.prop(context.scene, "persian_strip_text", text="Text")
+        row = box.row()
+        row.template_list(
+            "PT_UL_persian_strip_lines",
+            "",
+            scene,
+            "persian_strip_lines",
+            scene,
+            "persian_strip_lines_index",
+            rows=4,
+        )
+        side = row.column(align=True)
+        side.operator("pt.seq_line_add", text="", icon='ADD')
+        side.operator("pt.seq_line_remove", text="", icon='REMOVE')
+        side.separator()
+        side.operator("pt.seq_line_move", text="", icon='TRIA_UP').direction = 'UP'
+        side.operator("pt.seq_line_move", text="", icon='TRIA_DOWN').direction = 'DOWN'
 
         row = box.row(align=True)
         row.operator("pt.seq_paste_persian_text", text="Paste", icon='PASTEDOWN')
@@ -355,15 +681,26 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         box = layout.box()
         box.label(text="Font Settings:", icon='PREFERENCES')
         row = box.row(align=True)
-        row.prop(context.scene, "persian_font", text="Font")
+        row.prop(scene, "persian_font", text="Font")
         row.operator("view3d.refresh_persian_fonts", text="", icon='FILE_REFRESH')
         box.operator("pt.seq_apply_persian_font", text="Apply Font", icon='FILE_FONT')
 
+        self._draw_appearance(layout, strip)
 
+
+# PT_PersianStripLine must be registered before the CollectionProperty that
+# uses it, so it leads the tuple and register() installs the Scene properties
+# only after the whole tuple is in.
 __classes__ = (
+    PT_PersianStripLine,
+    PT_UL_persian_strip_lines,
+    PT_OT_SeqLineAdd,
+    PT_OT_SeqLineRemove,
+    PT_OT_SeqLineMove,
     PT_OT_SeqPastePersianText,
     PT_OT_SeqLoadPersianText,
     PT_OT_SeqApplyPersianText,
+    PT_OT_SeqResetAppearance,
     PT_OT_SeqApplyPersianFont,
     PT_OT_SeqAddPersianStrip,
     SEQUENCER_PT_persiantype,
@@ -371,19 +708,28 @@ __classes__ = (
 
 
 def register():
-    bpy.types.Scene.persian_strip_text = StringProperty(
-        name="Persian Text",
-        description=(
-            "Persian/Arabic text in logical reading order. Apply it to shape "
-            "it into the active text strip"
-        ),
-        default="",
-    )
     for cls in __classes__:
         bpy.utils.register_class(cls)
 
+    bpy.types.Scene.persian_strip_lines = CollectionProperty(
+        type=PT_PersianStripLine,
+        name="Persian Text Lines",
+        description=(
+            "Persian/Arabic text in logical reading order, one entry per "
+            "line. Apply it to shape it into the active text strip"
+        ),
+    )
+    bpy.types.Scene.persian_strip_lines_index = IntProperty(
+        name="Active Line",
+        description="Index of the line selected in the list",
+        default=0,
+        min=0,
+    )
+
 
 def unregister():
+    del bpy.types.Scene.persian_strip_lines_index
+    del bpy.types.Scene.persian_strip_lines
+
     for cls in reversed(__classes__):
         bpy.utils.unregister_class(cls)
-    del bpy.types.Scene.persian_strip_text
