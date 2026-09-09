@@ -25,7 +25,7 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 - **Paste:** خواندن متن فارسی یا عربی از Clipboard، نرمال‌سازی حروف و آماده‌سازی برای ادامه تایپ و پاک‌کردن.
 - **تایپ مستقیم فارسی و عربی:** پشتیبانی از تایپ، Backspace، Delete، حرکت مکان‌نما و خطوط چندگانه در Edit Mode.
 - **تغییر جهت متن:** جابه‌جایی سریع میان راست‌به‌چپ و چپ‌به‌راست.
-- **انتخاب فونت:** استفاده از فونت‌های همراه افزونه، فونت‌های Windows یا یک پوشه فونت سفارشی.
+- **انتخاب فونت:** سه فهرست جدا — فونت‌های همراه افزونه، فونت‌های سیستم‌عامل، و فونت‌های اختصاصی شما.
 - **تنظیمات ظاهر فونت:** وزن Regular/Bold، اندازه، شیب، فاصله حروف، کلمات و خطوط، Offset، Extrude، Bevel و Curve Resolution.
 - **Mesh Clean:** تبدیل Text انتخاب‌شده به Mesh و پاک‌سازی خودکار توپولوژی.
 - **پشتیبانی از Video Sequencer:** ساخت و ویرایش متن فارسی روی Text Stripها در ویرایشگر ویدیو، با تراز راست خودکار و اعمال فونت‌های همراه افزونه.
@@ -59,12 +59,49 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 3. افزونه حروف عربی `ي` و `ك` را به شکل استاندارد فارسی `ی` و `ک` تبدیل می‌کند، کشیده و ZWJ اضافی را حذف می‌کند و متن را راست‌چین تحویل می‌دهد.
 4. مکان‌نما در انتهای متن قرار می‌گیرد و می‌توانید بلافاصله تایپ را ادامه دهید.
 
+### کار با Video Sequencer
+
+![پنل متن در Video Sequencer](docs/images/panel-text.png)
+
+پنل در نوار کناری Video Sequencer، تب **Persian type** قرار دارد. برای دیدنش وارد فضای کاری Video Editing شوید، حالت نمایش را روی **Sequencer & Preview** بگذارید و کلید `N` را بزنید.
+
+#### ساخت و ویرایش متن
+
+1. روی **Add Text Strip** کلیک کنید. یک Text Strip راست‌چین در فریم جاری و روی اولین کانال خالی ساخته می‌شود.
+2. متن فارسی را در فهرست خط‌ها بنویسید. هر ردیف یک خط است و با دکمه‌های کنار فهرست می‌توانید خط اضافه کنید، حذف کنید یا جابه‌جا کنید.
+3. روی **Apply to Strip** بزنید تا متن شکل بگیرد و در استریپ نوشته شود.
+4. **Paste** متن Clipboard را با نرمال‌سازی حروف عربی می‌خواند و روی خطوط پخش می‌کند.
+5. **Load from Strip** متن موجود استریپ را برای ویرایش دوباره به فهرست برمی‌گرداند.
+
+> اگر متن شما عدد یا واژه لاتین دارد، هنگام **Load from Strip** هشدار می‌گیرید. علتش در بخش محدودیت‌ها آمده است.
+
+#### فونت و ظاهر
+
+![فونت‌ها و تنظیمات ظاهر](docs/images/panel-fonts-appearance.png)
+
+فونت پیش‌فرض Text Strip در Blender حروف فارسی را درست نشان نمی‌دهد، پس بعد از ساخت استریپ حتماً یک فونت اعمال کنید. سه فهرست جدا در اختیار دارید:
+
+- **Bundled Fonts:** ۷۶ فونت همراه افزونه.
+- **System Fonts:** فونت‌های نصب‌شده روی سیستم‌عامل. اگر فهرست خالی بود دکمه Rescan را بزنید.
+- **Custom Fonts:** پوشه فونت دلخواه شما به‌علاوه فونت‌هایی که ذخیره کرده‌اید.
+
+بخش **Appearance** این‌ها را کنترل می‌کند: اندازه، موقعیت روی تصویر، عرض شکست خط، فاصله خطوط با حالت نسبی و پیکسلی، رنگ، بولد و ایتالیک، و ترازبندی افقی و عمودی. سه افکت هم هرکدام پشت کلید خودشان قرار دارند: **Shadow** با زاویه و فاصله و محو، **Outline** با رنگ و ضخامت، و **Box** با رنگ و حاشیه و گردی گوشه.
+
+دکمه **Reset Appearance** همه را به حالت اولیه برمی‌گرداند ولی تراز راست را حفظ می‌کند.
+
+#### پیش‌تنظیم استایل
+
+ردیف **Text Style Presets** بالای بخش Appearance، ظاهر فعلی را ذخیره می‌کند تا با یک کلیک روی استریپ‌های دیگر اعمال شود. از مکانیزم خود Blender استفاده می‌کند، پس پیش‌تنظیم‌هایی که جای دیگری در Blender ساخته‌اید هم اینجا دیده می‌شوند.
+
+پیش‌تنظیم ۲۱ ویژگی را نگه می‌دارد: رنگ، بولد و ایتالیک، اندازه، عرض شکست خط، کل گروه سایه و خط دور و جعبه، ترازبندی و لنگرها، موقعیت، و فونت. فاصله خطوط در پیش‌تنظیم ذخیره **نمی‌شود**، چون Blender آن را در فهرست خود نگذاشته است.
+
+
 ### تنظیم فونت
 
 یک Text Object را انتخاب کنید و از بخش **Font Settings** استفاده کنید:
 
 - انتخاب فونت‌های داخلی افزونه
-- انتخاب و Apply کردن Windows Fonts
+- انتخاب و Apply کردن فونت‌های سیستم‌عامل
 - افزودن پوشه فونت سفارشی
 - ذخیره فونت فعلی در فهرست فونت‌های محبوب
 - تغییر وزن به Regular یا Bold، در صورت وجود فایل Bold در خانواده فونت
@@ -120,7 +157,7 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 - **Paste:** Creates right-aligned Persian/Arabic text from the clipboard, normalizes common Arabic characters, and leaves the caret ready for continued editing.
 - **Direct Persian/Arabic editing:** Supports typing, Backspace, Delete, cursor navigation, and multiline text in Edit Mode.
 - **Text direction:** Quickly switch between RTL and LTR alignment.
-- **Font selection:** Use bundled fonts, Windows Fonts, or a custom font directory.
+- **Font selection:** Three separate lists — the bundled fonts, your operating system's fonts, and your own custom fonts.
 - **Font appearance:** Regular/Bold, size, slant, character/word/line spacing, offset, extrusion, bevel, and curve resolution.
 - **Mesh Clean:** Converts selected Text objects to Mesh and runs the complete cleanup workflow automatically.
 - **Video Sequencer support:** Create and edit Persian text on Video Sequencer text strips, with right alignment applied automatically and the bundled fonts available on the strip.
@@ -154,11 +191,48 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 3. The extension normalizes Arabic Yeh/Kaf, removes Tatweel and unnecessary ZWJ characters, and creates an RTL Text Object.
 4. The caret remains at the end so typing can continue immediately.
 
+### Working in the Video Sequencer
+
+![The text panel in the Video Sequencer](docs/images/panel-text.png)
+
+The panel lives in the Video Sequencer sidebar under the **Persian type** tab. To reach it, open the Video Editing workspace, set the view to **Sequencer & Preview**, and press `N`.
+
+#### Creating and editing text
+
+1. Click **Add Text Strip**. A right-aligned text strip is created at the current frame on the first free channel.
+2. Type Persian into the line list. Each row is one line, and the buttons beside the list add, remove and reorder lines.
+3. Click **Apply to Strip** to shape the text and write it into the strip.
+4. **Paste** reads the clipboard with Arabic character normalization and spreads it across the lines.
+5. **Load from Strip** reads the strip's existing text back into the list for further editing.
+
+> If your text contains digits or Latin words, **Load from Strip** warns you. The Limitations section explains why.
+
+#### Fonts and appearance
+
+![Fonts and appearance controls](docs/images/panel-fonts-appearance.png)
+
+Blender's default text strip font does not render Persian correctly, so always apply a font after creating a strip. Three separate lists are available:
+
+- **Bundled Fonts:** the 76 fonts shipped with the extension.
+- **System Fonts:** the fonts installed on your operating system. Press Rescan if the list is empty.
+- **Custom Fonts:** your chosen folder plus any fonts you have saved.
+
+The **Appearance** section controls size, position on frame, wrap width, line spacing in relative or absolute pixels, colour, bold and italic, and horizontal and vertical alignment. Three effects sit behind their own toggles: **Shadow** with angle, offset and blur, **Outline** with colour and width, and **Box** with colour, margin and roundness.
+
+**Reset Appearance** restores the defaults while keeping right alignment.
+
+#### Style presets
+
+The **Text Style Presets** row at the top of Appearance saves the current look so it can be applied to other strips with one click. It uses Blender's own preset mechanism, so presets created elsewhere in Blender appear here too.
+
+A preset stores 21 properties: colour, bold and italic, size, wrap width, the full shadow, outline and box groups, alignment and anchors, position, and the font. Line spacing is **not** stored, because Blender does not include it in its own preset list.
+
+
 ### Font controls
 
 Select a Text Object and use **Font Settings** to:
 
-- Choose bundled, saved, custom, or Windows fonts
+- Choose from the bundled, system, or custom font lists
 - Apply Regular or Bold when a separate Bold font file is available
 - Adjust size, slant, and character/word/line spacing
 - Adjust offset, extrusion, bevel depth, bevel segments, and curve resolution
@@ -193,6 +267,42 @@ The extension includes 76 fonts. Version 3.0 added the following open font famil
 
 All newly bundled fonts were tested by generating Persian geometry in Blender. Their SIL Open Font License files are included under `fonts/licenses`.
 
+## محدودیت‌ها | Limitations
+
+### فارسی
+
+این موارد در نسخه فعلی برطرف نشده‌اند و هنگام **بازخوانی** متن از یک استریپ یا آبجکت خود را نشان می‌دهند. نوشتن و نمایش متن تحت تأثیر نیست.
+
+- **حرف «ک»** در بازخوانی به شکل نمایشی برمی‌گردد، نه حرف پایه.
+- **ارقام و واژه‌های لاتین** در بازخوانی معکوس می‌شوند. `۱۲۳` به `۳۲۱` و `abc` به `cba`.
+- **حرف «ی»** در حالت میانی به شکل عربی تنزل می‌کند، هرچند نرمال‌سازی بعداً آن را ترمیم می‌کند.
+
+به همین دلیل **Load from Strip** متن بازخوانی‌شده را دوباره شکل می‌دهد و با متن استریپ مقایسه می‌کند، و اگر نخواند به شما هشدار می‌دهد. یعنی داده بی‌سروصدا خراب نمی‌شود.
+
+دو محدودیت دیگر:
+
+- **Bold و Italic روی Text Strip** از نوع مصنوعی Blender است، نه فایل فونت واقعی، و برای فارسی معمولاً خوب درنمی‌آید. متن سه‌بعدی می‌تواند فایل Bold جداگانه بگیرد، Text Strip نمی‌تواند.
+- **گرادیان رنگی** روی متن، سایه، خط دور یا جعبه ممکن نیست. Text Strip در Blender فقط رنگ تخت می‌پذیرد.
+- **نام فونت‌های سیستم** از نام فایل خوانده می‌شود، که روی Windows کوتاه و نامفهوم است. مسیر کامل در توضیح هر گزینه دیده می‌شود. این هزینه‌ای است که پرداختیم تا فهرست فونت در هر بار رسم مجدد، دیتابلاک فونت نسازد.
+
+### English
+
+These are not fixed in the current version, and they surface when **reading text back** from a strip or an object. Writing and displaying text is unaffected.
+
+- **Keheh** returns as its presentation form rather than the base letter.
+- **Digits and Latin words** come back reversed. `۱۲۳` returns as `۳۲۱`, `abc` as `cba`.
+- **Persian Yeh** in medial position degrades to the Arabic form, though normalization repairs it downstream.
+
+That is why **Load from Strip** re-shapes what it read and compares it against the strip, warning you when the two differ. Data is never corrupted silently.
+
+Two further limits:
+
+- **Bold and Italic on a text strip** are Blender's synthetic styles rather than real font faces, and they suit Persian poorly. A 3D text object can take a separate Bold file; a text strip cannot.
+- **Colour gradients** are not possible on the text, shadow, outline or box. Blender's text strip accepts flat colour only.
+- **System font names** come from filenames, which on Windows are terse. Each entry's description shows the full path. This is the cost of keeping the font lists from creating a font datablock on every redraw.
+
+---
+
 ## Compatibility
 
 | Item | Support |
@@ -204,12 +314,18 @@ All newly bundled fonts were tested by generating Persian geometry in Blender. T
 
 ## Version 3.2 validation
 
-- Python compilation passed for all extension modules.
+Run against the published `persiantype-3.2.0.zip` with Blender 5.2.0 LTS, headless.
+
+- Python compilation passed for every extension module.
 - Blender Extension Manifest validation passed.
-- Add Text, clipboard normalization, continued Persian typing, and deletion were tested.
-- Regular/Bold font handling and appearance reset were tested.
-- The complete Text-to-Mesh cleanup workflow was tested in Blender 5.1.2.
-- All newly bundled fonts loaded and produced Persian geometry successfully.
+- The package holds 91 files with no development tooling, documentation images, bytecode or nested archive.
+- All three version locations agree at 3.2.0: the manifest, the `bl_info` tuple, and the `ADDON_VERSION` constant.
+- Font separation: the bundled list holds exactly the 76 files on disk with no foreign entries; the system list resolves 510 fonts whose paths all exist; fifteen enum callback invocations create zero font datablocks; a font from each of the three lists applies to both a 3D text object and a sequencer text strip.
+- Style presets: a look saves to a real preset file, survives the strip being changed, and is restored exactly; removal deletes the file.
+- Appearance and multi-line editing: line add, remove and reorder behave; a two-line entry shapes both lines and keeps the newline; Load splits it back to the original codepoints; Reset restores size and colour while keeping right alignment.
+- Regression: the thirteen viewport operators, both panels and the line collection survive, and a full register and unregister cycle leaves nothing behind.
+
+Not validated: the macOS and Linux font directories, since the test machine runs Windows.
 
 ## License
 
