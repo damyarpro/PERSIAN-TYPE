@@ -19,14 +19,12 @@ newline:
     Scene.persian_strip_lines
 
 The shaping engine is the single source of truth for both directions; nothing
-here reimplements shaping. The read-back direction is lossy -- measured against
-the engine as it stands: Keheh comes back as its presentation form U+FB8E (the
-defect in CLAUDE.md section 4), and left-to-right runs (Latin words, digit
-groups) come back reversed, because ``unlink_text`` reverses the whole string
-while ``link_text`` had kept those runs in logical order. ``Load`` therefore
-re-shapes what it read and warns when the result does not match the strip's
-current text, instead of silently handing back a corrupted buffer. Nothing here
-tries to repair the engine.
+here reimplements shaping. The read-back direction is no longer exact for every
+input: ``link_text`` is not injective, so two different logical strings can
+shape to one identical body, and no unshaper can choose between them. ``Load``
+therefore re-shapes what it read and warns when the result does not match the
+strip's current text, instead of silently handing back a buffer that would
+render differently. Nothing here tries to repair the engine.
 
 Appearance properties are drawn straight onto the strip with ``layout.prop``.
 That is deliberate: direct property editing is what Blender users expect, and it
@@ -150,6 +148,31 @@ def _unshape(shaped_text):
     return ''.join(Ar.unlink_text(Ar.swap_lines(shaped_text)))
 
 
+def _shape_for_display(logical_text):
+    """Presentation forms for drawing a logical string in a UI label.
+
+    Blender's interface font has no Arabic shaping and no bidi algorithm --
+    the same limitation a FONT object and a text strip have -- so a logical
+    string handed to a label comes out left-to-right with every letter in its
+    isolated form, so a word reads backwards and its letters do not join.
+    The shaped form is already presentation forms in visual order,
+    which is exactly what an unshaped left-to-right renderer needs, so a label
+    fed the shaped string draws readable Persian.
+
+    This is a read path only. The shaped string is never written back into
+    ``persian_strip_lines``; the logical text stays the single source of truth
+    for Apply, as section 3 of CLAUDE.md requires.
+
+    Pure ASCII is returned untouched. That is both a shortcut and a guarantee:
+    it keeps a Latin strip name byte-identical instead of routing it through
+    the bidi engine, and it costs 0.02 us against the 50 us the engine takes
+    for a 12 character Latin string.
+    """
+    if not logical_text or logical_text.isascii():
+        return logical_text
+    return _shape(logical_text)
+
+
 def _joined_lines(scene):
     """The line collection as one logical string, newline separated."""
     return "\n".join(line.text for line in scene.persian_strip_lines)
@@ -182,19 +205,29 @@ class PT_PersianStripLine(PropertyGroup):
 
 
 class PT_UL_persian_strip_lines(bpy.types.UIList):
-    """Editable list of text lines.
+    """Read-only preview of the text lines, one row per line.
 
-    Each row is an editable field rather than a label, so the list itself is
-    the multi-line editor; no popup or separate edit step is needed.
+    The rows are labels rather than editable fields, which is a deliberate
+    split. Only a label can be given the *shaped* text and so read as Persian;
+    an editable field has to be bound to the logical ``text`` property and
+    would draw it garbled, and typing into a shaped string would write
+    presentation forms straight back into the logical buffer. Editing
+    therefore happens in the single field the panel draws under the list,
+    bound to whichever row is active.
     """
 
     def draw_item(self, context, layout, data, item, icon,
                   active_data, active_propname, index):
         row = layout.row(align=True)
-        sub = row.row()
-        sub.scale_x = 0.22
-        sub.label(text=str(index + 1))
-        row.prop(item, "text", text="", emboss=False)
+        number = row.row()
+        number.scale_x = 0.22
+        number.label(text=str(index + 1))
+        # Fed presentation forms on purpose -- see _shape_for_display. A label
+        # showing shaped text is not a sign that the logical buffer has been
+        # corrupted; item.text still holds the logical string.
+        shaped = row.row()
+        shaped.alignment = 'RIGHT'
+        shaped.label(text=_shape_for_display(item.text))
 
 
 class PT_OT_SeqLineAdd(bpy.types.Operator):
@@ -312,8 +345,8 @@ class PT_OT_SeqLoadPersianText(bpy.types.Operator):
     bl_label = "Load from Strip"
     bl_description = (
         "Read the active text strip back into the line list for editing, one "
-        "entry per line. Keheh and left-to-right runs do not round-trip "
-        "exactly; you are warned when they do not"
+        "entry per line. A few inputs cannot be recovered exactly; you are "
+        "warned whenever the recovered text would render differently"
     )
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -334,18 +367,18 @@ class PT_OT_SeqLoadPersianText(bpy.types.Operator):
             self.report({'ERROR'}, "The active text strip is empty")
             return {'CANCELLED'}
 
-        # normalize repairs the unshaper's Persian Yeh -> Arabic Yeh
-        # degradation; it cannot repair the Keheh defect, which is why the
-        # result is checked against the original below rather than trusted.
+        # normalize folds Arabic Yeh onto Persian Yeh, matching every other
+        # ingest path. The re-shape check below still runs because link_text
+        # is not injective, so recovery cannot be trusted on its own.
         logical = normalize_persian_text(_unshape(shaped))
         count = _replace_lines(context.scene, logical)
 
         if _shape(logical) != shaped:
             self.report(
                 {'WARNING'},
-                "Loaded text does not re-shape to the strip's current text. "
-                "Keheh returns as a presentation form and Latin or digit runs "
-                "return reversed. Fix the lines before applying",
+                "Loaded text does not re-shape to the strip's current text, "
+                "so applying it now would change what the strip shows. Check "
+                "the lines before applying",
             )
             return {'FINISHED'}
 
@@ -667,6 +700,11 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         # Compared with ==, not is: two reads of the same strip hand back two
         # different bpy_struct wrappers, and only == compares what they wrap.
         preset_row.enabled = strip is not None and _preset_strip(context) == strip
+        # Deliberately not run through _shape_for_display. A preset name is
+        # user text and could be Persian, but the menu this labels is drawn by
+        # Blender's own draw_preset and lists those names unshaped. Shaping
+        # only the header would leave the active preset unrecognisable against
+        # the list it was chosen from.
         preset_row.menu(
             PT_MT_text_style_presets.bl_idname,
             text=PT_MT_text_style_presets.active_preset_name(),
@@ -757,7 +795,12 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         if strip is None:
             box.label(text="Select a Text strip", icon='INFO')
         else:
-            box.label(text=strip.name, icon='SEQ_STRIP_DUPLICATE')
+            # Shaped for the same reason the list rows are: a strip the user
+            # named in Persian would otherwise draw reversed and disconnected.
+            box.label(
+                text=_shape_for_display(strip.name),
+                icon='SEQ_STRIP_DUPLICATE',
+            )
 
         row = box.row()
         row.template_list(
@@ -775,6 +818,21 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         side.separator()
         side.operator("pt.seq_line_move", text="", icon='TRIA_UP').direction = 'UP'
         side.operator("pt.seq_line_move", text="", icon='TRIA_DOWN').direction = 'DOWN'
+
+        # The list above is a preview; this is the only place a line is typed.
+        # It is bound to the logical property, so it draws unshaped -- that is
+        # the cost of it being the edit target, and the row above shows the
+        # same line shaped.
+        lines = scene.persian_strip_lines
+        index = scene.persian_strip_lines_index
+        edit = box.column(align=True)
+        edit.label(text="Edit Active Line:", icon='GREASEPENCIL')
+        if 0 <= index < len(lines):
+            edit.prop(lines[index], "text", text="")
+        else:
+            empty = edit.row()
+            empty.enabled = False
+            empty.label(text="No line selected")
 
         row = box.row(align=True)
         row.operator("pt.seq_paste_persian_text", text="Paste", icon='PASTEDOWN')

@@ -44,6 +44,14 @@ chars_arabic_symbols = ['ـ', '،', '؟', '×', '÷']
 chars_common = [' ', '.', ',', ':', '|', '(', ')', '[', ']', '{', '}', '!', '+', '-', '*', '/', '\\', '%', '"', '\'', '>', '<', '=', '~', '_']
 chars_digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
+# Characters that stay inside a number when they sit between two digits.
+# They are the Unicode bidi common and European separators that chars_common
+# already lists, and they carry decimals, thousands, dates, times and version
+# numbers. Space is absent on purpose: in a right-to-left paragraph a space
+# between two numbers separates them into two independent runs.
+
+chars_number_separators = frozenset('.,:/+-')
+
 # Check if a letter should be connected to the letter preceding it
 
 def is_right_connectable(c):
@@ -111,6 +119,41 @@ def is_arabic_char_variant(c):
     return False
 
 
+# Digits of every script this add-on can be handed: ASCII, Persian
+# (U+06F0-U+06F9) and Arabic-Indic (U+0660-U+0669). chars_digits lists only
+# the ASCII ten and normalize_persian_text does not fold the other two ranges
+# into it, so a Persian number would otherwise match no digit rule at all.
+
+def is_digit_char(c):
+
+    return (c in chars_digits
+            or '\u06f0' <= c <= '\u06f9'
+            or '\u0660' <= c <= '\u0669')
+
+
+# True when text[index] is part of a number: a digit, or a separator with a
+# digit on each side. The full stop that ends a sentence has no digit before
+# it and so stays ordinary right-to-left punctuation.
+
+def is_number_run_member(index, text):
+
+    if index < 0 or index >= len(text):
+
+        return False
+
+    if is_digit_char(text[index]):
+
+        return True
+
+    if text[index] not in chars_number_separators:
+
+        return False
+
+    return (index > 0 and is_digit_char(text[index - 1])
+            and index + 1 < len(text) and is_digit_char(text[index + 1]))
+
+
+
 # Get the previous character from a buffer or text array
 
 def get_previous_alphabet(index, text):
@@ -161,6 +204,14 @@ def link_text(unlinked_text):
     # but the buffer still contains the two
 
     uncounted_chars = 0
+
+    # Positions that have to come out in logical order, and the index in
+    # linked_text where the previous character landed. Members of such a run
+    # follow each other directly because nothing is inserted between them.
+
+    ltr_ordered = get_ltr_ordered_positions(unlinked_text)
+
+    last_insert_pos = 0
 
     #
 
@@ -241,6 +292,20 @@ def link_text(unlinked_text):
         # Common characters follows the direction of the previous text (RTL or LTR)
 
         if current_char in chars_common:
+
+            # A separator inside a number belongs to the left-to-right run,
+            # not to the right-to-left text around it. get_previous_alphabet
+            # skips over digits, so for "3.2" set in Persian it reports the
+            # Persian word and the test below would send the separator to the
+            # head of the line, leaving "2.3".
+
+            if chars_count in ltr_ordered:
+
+                last_insert_pos += 1
+
+                linked_text.insert(last_insert_pos, current_char)
+
+                continue
             
             previous_alpha = get_previous_alphabet(chars_count, unlinked_text)
             next_alpha = get_next_alphabet(chars_count, unlinked_text)
@@ -253,6 +318,8 @@ def link_text(unlinked_text):
                     char_pos += 1
             
             linked_text.insert(char_pos, current_char)
+
+            last_insert_pos = char_pos
 
             continue
 
@@ -271,7 +338,16 @@ def link_text(unlinked_text):
 
             # Numbers
 
-            if len(linked_text) > 0 and linked_text[0] in chars_digits:
+            # Once a left-to-right run carries a number with a separator in
+            # it, the whole run is emitted in logical order, each character
+            # straight after the one before it. Runs without such a number
+            # keep the placement the two rules below already gave them.
+
+            if chars_count in ltr_ordered:
+
+                char_pos = last_insert_pos + 1
+
+            elif len(linked_text) > 0 and linked_text[0] in chars_digits:
 
                 while char_pos < len(linked_text) and linked_text[char_pos] in chars_digits:
                     char_pos +=1
@@ -289,6 +365,8 @@ def link_text(unlinked_text):
                     c -= 1
 
             linked_text.insert(char_pos, current_char)
+
+            last_insert_pos = char_pos
 
             continue
 
@@ -351,6 +429,114 @@ def swap_lines(linked_text):
         char_counter += 1
 
     return ''.join(new_text)
+
+
+# link_text reverses Arabic text but leaves left-to-right runs -- digits, Latin
+# words, and the punctuation embedded in them -- in logical order. unlink_text
+# reverses everything it reads, so those runs have to be turned back.
+
+# True when link_text placed this character as part of a left-to-right run
+# rather than inserting it at the head of the reversed output.
+
+def _is_ltr_run_member(index, text):
+
+    c = text[index]
+
+    if c == '\n' or c in chars_arabic_symbols or is_arabic_char(c):
+
+        return False
+
+    # A separator inside a number is part of the left-to-right run link_text
+    # emitted in logical order, whatever alphabet surrounds the number.
+
+    if is_number_run_member(index, text):
+
+        return True
+
+
+    if c in chars_common:
+
+        # Same test link_text uses to decide whether a common character joins
+        # the left-to-right run or the surrounding right-to-left text: a space
+        # between two Latin words belongs to the run, a space between a Latin
+        # word and Persian text separates two of them.
+
+        previous_alpha = get_previous_alphabet(index, text)
+        next_alpha = get_next_alphabet(index, text)
+
+        return (not is_arabic_char(previous_alpha)
+                and not is_arabic_char(next_alpha)
+                and previous_alpha != '\n')
+
+    return True
+
+
+# Positions link_text must emit in logical order instead of inserting at the
+# head of the line: every member of a left-to-right run after the first, but
+# only for runs that carry a number with a separator in it. Without such a
+# separator the older placement rules already order the run correctly, and
+# leaving them alone keeps existing scenes rendering byte for byte the same.
+
+def get_ltr_ordered_positions(text):
+
+    positions = set()
+
+    if not any(c in chars_number_separators for c in text):
+
+        return positions
+
+    index = 0
+
+    while index < len(text):
+
+        if not _is_ltr_run_member(index, text):
+
+            index += 1
+
+            continue
+
+        run_end = index
+
+        while run_end < len(text) and _is_ltr_run_member(run_end, text):
+
+            run_end += 1
+
+        if any(text[i] in chars_number_separators
+               and is_number_run_member(i, text)
+               for i in range(index, run_end)):
+
+            positions.update(range(index + 1, run_end))
+
+        index = run_end
+
+    return positions
+
+
+
+# Reverse every maximal left-to-right run in place, undoing the blanket
+# reversal unlink_text applies while walking the presentation forms.
+
+def _restore_ltr_runs(text):
+
+    run_start = -1
+
+    for i in range(len(text) + 1):
+
+        if i < len(text) and _is_ltr_run_member(i, text):
+
+            if run_start == -1:
+
+                run_start = i
+
+            continue
+
+        if run_start != -1:
+
+            text[run_start:i] = reversed(text[run_start:i])
+
+            run_start = -1
+
+    return text
 
 
 # Unlink Arabic text (get the original text before it gets connected)
@@ -482,7 +668,9 @@ def unlink_text(linked_text):
 
         elif ord(c) in {0xFB8E, 0xFB8F, 0xFB90, 0xFB91}:
 
-            unlinked_text.insert(0, 'ﮎ')
+            # U+FB8E is the presentation form link_text emits; the buffer
+            # holds base letters, so the base Keheh has to go back in.
+            unlinked_text.insert(0, '\u06a9')
 
         elif ord(c) in {0xFB92, 0xFB93, 0xFB94, 0xFB95}:
 
@@ -516,13 +704,18 @@ def unlink_text(linked_text):
 
             unlinked_text.insert(0, 'ؤ')
 
-        elif ord(c) in {0xFEF1, 0xFEF2, 0xFEF3, 0xFEF4}:
+        elif ord(c) in {0xFEF1, 0xFEF2}:
 
             unlinked_text.insert(0, 'ي')
 
-        elif ord(c) in {0xFEEF, 0xFEF0}:
+        # U+FEF3/U+FEF4 are reached from Persian Yeh (0xFEEF + 4/+5) and from
+        # Arabic Yeh (0xFEF1 + 2/+3) alike, so the shaped form cannot say which
+        # letter it came from. Resolve towards Persian: every ingest path runs
+        # normalize_persian_text, which already folds Arabic Yeh into Persian.
 
-            unlinked_text.insert(0, 'ی')
+        elif ord(c) in {0xFEEF, 0xFEF0, 0xFEF3, 0xFEF4}:
+
+            unlinked_text.insert(0, '\u06cc')   # Persian Yeh U+06CC
 
         elif ord(c) in {0xFE89, 0xFE8A, 0xFE8B, 0xFE8C}:
 
@@ -554,7 +747,7 @@ def unlink_text(linked_text):
 
             unlinked_text.insert(0, c)
 
-    return unlinked_text
+    return _restore_ltr_runs(unlinked_text)
 
 
 # Prepare our text (3D text, text_buffer)

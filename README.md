@@ -1,4 +1,4 @@
-# Persian Type 3.2 — افزونه تایپ فارسی و عربی برای Blender
+# Persian Type 3.3 — افزونه تایپ فارسی و عربی برای Blender
 
 [![Latest Release](https://img.shields.io/github/v/release/damyarpro/PERSIAN-TYPE?label=Latest%20Release)](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
 ![Blender](https://img.shields.io/badge/Blender-5.0.1%2B-orange)
@@ -8,7 +8,7 @@
 
 Create, type, paste, style, and convert Persian or Arabic text into a clean mesh directly inside Blender.
 
-[دانلود نسخه 3.2](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.2) · [Download version 3.2](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.2)
+[دانلود نسخه 3.3](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.3) · [Download version 3.3](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.3)
 
 ![متن سه‌بعدی فارسی در Blender | Persian 3D text in Blender](docs/images/3d-text.png)
 
@@ -19,9 +19,9 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 
 ## فارسی
 
-### قابلیت‌های اصلی نسخه 3.2
+### قابلیت‌های اصلی نسخه 3.3
 
-- **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 3.2» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
+- **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 3.3» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
 - **Paste:** خواندن متن فارسی یا عربی از Clipboard، نرمال‌سازی حروف و آماده‌سازی برای ادامه تایپ و پاک‌کردن.
 - **تایپ مستقیم فارسی و عربی:** پشتیبانی از تایپ، Backspace، Delete، حرکت مکان‌نما و خطوط چندگانه در Edit Mode.
 - **تغییر جهت متن:** جابه‌جایی سریع میان راست‌به‌چپ و چپ‌به‌راست.
@@ -34,11 +34,14 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 - **پیش‌تنظیم استایل متن:** ذخیره یک ظاهر و اعمال آن روی استریپ‌های دیگر، با همان مکانیزم خود Blender.
 - **سه فهرست فونت جدا:** فونت‌های همراه افزونه، فونت‌های سیستم، و فونت‌های اختصاصی شما.
 - **فونت سیستم چندسکویی:** اسکن بازگشتی روی Windows و macOS و Linux، با پشتیبانی از `.ttc`.
+- **رندر درست اعداد:** تاریخ، ساعت، شماره نسخه و عدد اعشاری حالا به ترتیب درست نمایش داده می‌شوند. پیش‌تر `3.2` به شکل `2.3` و `12:30` به شکل `30:12` دیده می‌شد.
+- **بازخوانی متن اصلاح شد:** حرف «ک»، حرف «ی» در حالت میانی، و ارقام و واژه‌های لاتین دیگر هنگام Load خراب نمی‌شوند.
+- **فارسی خوانا در خود پنل:** فهرست خط‌ها متن را شکل‌گرفته و راست‌چین نشان می‌دهد، نه به‌هم‌ریخته.
 - **سازگار با Blender 5:** حداقل نسخه موردنیاز Blender `5.0.1` است و API نسخه `5.2 LTS` نیز بررسی شده است.
 
 ### نصب
 
-1. فایل [`persiantype-3.2.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.2/persiantype-3.2.0.zip) را دانلود کنید.
+1. فایل [`persiantype-3.3.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.3/persiantype-3.3.0.zip) را دانلود کنید.
 2. در Blender وارد `Edit > Preferences > Get Extensions` شوید.
 3. از منوی بالا گزینه `Install from Disk` را انتخاب کنید.
 4. فایل ZIP را انتخاب و افزونه را فعال کنید.
@@ -157,9 +160,9 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 
 ## English
 
-### What’s new in version 3.2
+### What’s new in version 3.3
 
-- **Add Text:** Creates the “Persian Type 3.2” RTL text at the 3D Cursor and immediately enables Persian typing.
+- **Add Text:** Creates the “Persian Type 3.3” RTL text at the 3D Cursor and immediately enables Persian typing.
 - **Paste:** Creates right-aligned Persian/Arabic text from the clipboard, normalizes common Arabic characters, and leaves the caret ready for continued editing.
 - **Direct Persian/Arabic editing:** Supports typing, Backspace, Delete, cursor navigation, and multiline text in Edit Mode.
 - **Text direction:** Quickly switch between RTL and LTR alignment.
@@ -172,11 +175,14 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 - **Text style presets:** Save a look and apply it to other strips, using Blender's own preset mechanism.
 - **Three separate font lists:** the bundled fonts, your system fonts, and your own custom fonts.
 - **Cross-platform system fonts:** recursive scanning on Windows, macOS and Linux, including `.ttc`.
+- **Numbers render correctly:** dates, times, version numbers and decimals now read in logical order. `3.2` used to render as `2.3` and `12:30` as `30:12`.
+- **Read-back fixed:** Keheh, medial Persian Yeh, and Latin and digit runs no longer corrupt when reading text back from a strip or object.
+- **Readable Persian inside the panel:** the line list shows shaped, right-aligned text instead of disconnected letters in reverse.
 - **Blender 5 support:** Requires Blender `5.0.1` or newer; the Blender `5.2 LTS` API changes have also been reviewed.
 
 ### Installation
 
-1. Download [`persiantype-3.2.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.2/persiantype-3.2.0.zip).
+1. Download [`persiantype-3.3.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.3/persiantype-3.3.0.zip).
 2. Open `Edit > Preferences > Get Extensions` in Blender.
 3. Choose `Install from Disk` from the menu.
 4. Select the ZIP file and enable the extension.
@@ -283,15 +289,16 @@ All newly bundled fonts were tested by generating Persian geometry in Blender. T
 
 ### فارسی
 
-این موارد در نسخه فعلی برطرف نشده‌اند و هنگام **بازخوانی** متن از یک استریپ یا آبجکت خود را نشان می‌دهند. نوشتن و نمایش متن تحت تأثیر نیست.
+سه نقص بازخوانی که تا نسخه ۳.۲ وجود داشتند در نسخه ۳.۳ رفع شدند: حرف «ک»، حرف «ی» در حالت میانی، و معکوس‌شدن ارقام و واژه‌های لاتین. رندر اعداد هم اصلاح شد، پس تاریخ و ساعت و شماره نسخه دیگر برعکس نمایش داده نمی‌شوند.
 
-- **حرف «ک»** در بازخوانی به شکل نمایشی برمی‌گردد، نه حرف پایه.
-- **ارقام و واژه‌های لاتین** در بازخوانی معکوس می‌شوند. `۱۲۳` به `۳۲۱` و `abc` به `cba`.
-- **حرف «ی»** در حالت میانی به شکل عربی تنزل می‌کند، هرچند نرمال‌سازی بعداً آن را ترمیم می‌کند.
+آنچه هنوز باقی است:
 
-به همین دلیل **Load from Strip** متن بازخوانی‌شده را دوباره شکل می‌دهد و با متن استریپ مقایسه می‌کند، و اگر نخواند به شما هشدار می‌دهد. یعنی داده بی‌سروصدا خراب نمی‌شود.
+- **بعضی رشته‌ها ذاتاً قابل بازیابی نیستند.** موتور شکل‌دهی یک‌به‌یک نیست؛ دو متن منطقی متفاوت می‌توانند به یک تصویر یکسان تبدیل شوند، مثل `سلام abc.` و `سلام. abc`. هیچ الگوریتمی نمی‌تواند بین این دو انتخاب کند.
+- **یای عربی به یای فارسی تبدیل می‌شود.** یونیکد شکل میانی این دو حرف را یکی کرده، پس تشخیصشان از روی شکل ممکن نیست. چون افزونه فارسی‌محور است، به نفع فارسی حل شده. ظاهر رندرشده عوض نمی‌شود.
 
-دو محدودیت دیگر:
+در هر دو حالت **Load from Strip** متن بازخوانی‌شده را دوباره شکل می‌دهد و با استریپ مقایسه می‌کند و اگر نخواند هشدار می‌دهد، پس چیزی بی‌سروصدا خراب نمی‌شود.
+
+سه محدودیت دیگر که به خود Blender برمی‌گردند:
 
 - **Bold و Italic روی Text Strip** از نوع مصنوعی Blender است، نه فایل فونت واقعی، و برای فارسی معمولاً خوب درنمی‌آید. متن سه‌بعدی می‌تواند فایل Bold جداگانه بگیرد، Text Strip نمی‌تواند.
 - **گرادیان رنگی** روی متن، سایه، خط دور یا جعبه ممکن نیست. Text Strip در Blender فقط رنگ تخت می‌پذیرد.
@@ -299,15 +306,16 @@ All newly bundled fonts were tested by generating Persian geometry in Blender. T
 
 ### English
 
-These are not fixed in the current version, and they surface when **reading text back** from a strip or an object. Writing and displaying text is unaffected.
+The three read-back defects that existed through 3.2 are fixed in 3.3: Keheh, medial Persian Yeh, and reversed Latin and digit runs. Number rendering is fixed too, so dates, times and version numbers no longer display backwards.
 
-- **Keheh** returns as its presentation form rather than the base letter.
-- **Digits and Latin words** come back reversed. `۱۲۳` returns as `۳۲۱`, `abc` as `cba`.
-- **Persian Yeh** in medial position degrades to the Arabic form, though normalization repairs it downstream.
+What remains:
 
-That is why **Load from Strip** re-shapes what it read and compares it against the strip, warning you when the two differ. Data is never corrupted silently.
+- **Some strings cannot be recovered in principle.** The shaping engine is not injective; two different logical texts can produce one identical image, such as `سلام abc.` and `سلام. abc`. No algorithm can choose between them.
+- **Arabic Yeh folds onto Persian Yeh.** Unicode unifies the two letters' medial forms, so the shape cannot say which it came from. Since this is a Persian-first add-on it resolves towards Persian. The rendered result is unchanged.
 
-Two further limits:
+In both cases **Load from Strip** re-shapes what it read, compares it against the strip, and warns you when they differ, so nothing is corrupted silently.
+
+Three further limits, all of them Blender's:
 
 - **Bold and Italic on a text strip** are Blender's synthetic styles rather than real font faces, and they suit Persian poorly. A 3D text object can take a separate Bold file; a text strip cannot.
 - **Colour gradients** are not possible on the text, shadow, outline or box. Blender's text strip accepts flat colour only.
@@ -324,14 +332,15 @@ Two further limits:
 | Windows | Full system-font browsing and caching |
 | Linux / macOS | Bundled fonts and custom font folders |
 
-## Version 3.2 validation
+## Version 3.3 validation
 
-Run against the published `persiantype-3.2.0.zip` with Blender 5.2.0 LTS, headless.
+Run against the published `persiantype-3.3.0.zip` with Blender 5.2.0 LTS, headless.
 
 - Python compilation passed for every extension module.
 - Blender Extension Manifest validation passed.
 - The package holds 91 files with no development tooling, documentation images, bytecode or nested archive.
-- All three version locations agree at 3.2.0: the manifest, the `bl_info` tuple, and the `ADDON_VERSION` constant.
+- All three version locations agree at 3.3.0: the manifest, the `bl_info` tuple, and the `ADDON_VERSION` constant.
+- Shaping, measured over 20,020 strings against the previous release: exact round trip rose from 8,751 to 17,445 and re-shape stability from 9,900 to 19,314, with zero cases newly broken. 639 strings render differently, all of them number or Latin runs; 106 now read in correct logical order and none went from correct to wrong.
 - Font separation: the bundled list holds exactly the 76 files on disk with no foreign entries; the system list resolves 510 fonts whose paths all exist; fifteen enum callback invocations create zero font datablocks; a font from each of the three lists applies to both a 3D text object and a sequencer text strip.
 - Style presets: a look saves to a real preset file, survives the strip being changed, and is restored exactly; removal deletes the file.
 - Appearance and multi-line editing: line add, remove and reorder behave; a two-line entry shapes both lines and keeps the newline; Load splits it back to the original codepoints; Reset restores size and colour while keeping right alignment.
@@ -347,5 +356,5 @@ Not validated: the macOS and Linux font directories, since the test machine runs
 ## Links
 
 - [Latest release](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
-- [Version 3.2 release notes](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.2)
+- [Version 3.3 release notes](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.3)
 - [Report an issue](https://github.com/damyarpro/PERSIAN-TYPE/issues)
