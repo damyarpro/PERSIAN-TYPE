@@ -14,8 +14,8 @@ override them wherever the two disagree.
 | --- | --- |
 | Kind | Blender extension (manifest-based) + legacy `bl_info` add-on |
 | Extension id | `persiantype` |
-| Version | `3.4.1` |
-| Minimum Blender | `5.0.1` |
+| Version | `3.5.0` |
+| Minimum Blender | `5.3.0` |
 | License | GPL-3.0-or-later |
 | Language | Python, `bpy` only, no third-party runtime dependencies |
 | UI location | 3D Viewport, N-panel, tab **Persian type** |
