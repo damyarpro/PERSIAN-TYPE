@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 id = "persiantype"
 name = "Persian type"
-version = "3.3.0"
+version = "3.4.0"
 tagline = "Add Persian/Arabic type directly to Blender"
 maintainer = "DAMYAR <farsayyad@gmail.com>"
 blender_version_min = "5.0.1"
@@ -17,6 +17,11 @@ paths_exclude_pattern = [
     # Development tooling. These are for contributors, not for users, and
     # must never reach an installed extension.
     "/.claude/",
+    "/.agents/",
+    "/.codex/",
+    "/AGENTS.md",
+    "/dist/",
+    "/build/",
     "/CLAUDE.md",
     # README screenshots. They belong on GitHub, not in every user's install.
     "/docs/",
