@@ -1,14 +1,14 @@
-# Persian Type 3.4 — افزونه تایپ فارسی و عربی برای Blender
+# Persian Type 3.4.1 — افزونه تایپ فارسی و عربی برای Blender
 
 [![Latest Release](https://img.shields.io/github/v/release/damyarpro/PERSIAN-TYPE?label=Latest%20Release)](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
 ![Blender](https://img.shields.io/badge/Blender-5.0.1%2B-orange)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-ساخت، تایپ، چسباندن، تنظیم فونت و تبدیل متن فارسی یا عربی به Mesh تمیز، مستقیماً داخل Blender.
+متن فارسی و عربی راست‌به‌چپ را در **3D Viewport** و **Video Sequencer** بسازید و استایل دهید. در 3D Viewport می‌توانید متن را با **Mesh Clean** به Mesh تبدیل کنید.
 
-Create, type, paste, style, and convert Persian or Arabic text into a clean mesh directly inside Blender.
+Create and style right-to-left Persian and Arabic text in the **3D Viewport** and **Video Sequencer**. In the 3D Viewport, **Mesh Clean** converts text to a cleaned mesh.
 
-[دانلود نسخه 3.4](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.4) · [Download version 3.4](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.4)
+[دانلود نسخه 3.4.1](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.4.1) · [Download version 3.4.1](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.4.1)
 
 ![متن سه‌بعدی فارسی در Blender | Persian 3D text in Blender](docs/images/3d-text.png)
 
@@ -19,9 +19,9 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 
 ## فارسی
 
-### قابلیت‌های اصلی نسخه 3.4
+### قابلیت‌های اصلی
 
-- **Blender 5.3:** نسخهٔ 3.4.0 با Blender 5.3.0، 5.2.0 LTS و 5.0.1 روی Windows تست شده است.
+- **Blender 5.3:** نسخهٔ 3.4.1 با Blender 5.3.0، 5.2.0 LTS و 5.0.1 روی Windows تست شده است.
 - **سازگاری پنل:** کنترل‌های Line Spacing و Style Presets فقط در نسخه‌هایی نمایش داده می‌شوند که API آن‌ها را دارند؛ پنل در Blender 5.0.1 هم بدون این کنترل‌ها کار می‌کند.
 
 - **Add Text:** ساخت فوری متن راست‌چین «پرشین تایپ 3.4» در محل 3D Cursor و ورود مستقیم به حالت تایپ فارسی.
@@ -44,7 +44,7 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 
 ### نصب
 
-1. فایل [`persiantype-3.4.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.4/persiantype-3.4.0.zip) را دانلود کنید.
+1. فایل [`persiantype-3.4.1.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.4.1/persiantype-3.4.1.zip) را دانلود کنید.
 2. در Blender وارد `Edit > Preferences > Get Extensions` شوید.
 3. از منوی بالا گزینه `Install from Disk` را انتخاب کنید.
 4. فایل ZIP را انتخاب و افزونه را فعال کنید.
@@ -79,19 +79,19 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 
 #### ساخت و ویرایش متن
 
-1. روی **Add Text Strip** کلیک کنید. یک Text Strip راست‌چین در فریم جاری و روی اولین کانال خالی ساخته می‌شود.
-2. متن فارسی را در فهرست خط‌ها بنویسید. هر ردیف یک خط است و با دکمه‌های کنار فهرست می‌توانید خط اضافه کنید، حذف کنید یا جابه‌جا کنید.
+1. روی **Add Text Strip** کلیک کنید. یک Text Strip راست‌چین در فریم جاری و روی کانالی که افزونه انتخاب می‌کند ساخته می‌شود.
+2. یک خط را از فهرست راست‌چین انتخاب کنید و در **Edit Active Line** ویرایشش کنید. با دکمه‌های کنار فهرست می‌توانید خطوط را اضافه، حذف یا جابه‌جا کنید.
 3. روی **Apply to Strip** بزنید تا متن شکل بگیرد و در استریپ نوشته شود.
-4. **Paste** متن Clipboard را با نرمال‌سازی حروف عربی می‌خواند و روی خطوط پخش می‌کند.
+4. **Paste** متن Clipboard را نرمال‌سازی می‌کند و جایگزین فهرست خطوط می‌کند.
 5. **Load from Strip** متن موجود استریپ را برای ویرایش دوباره به فهرست برمی‌گرداند.
 
-> اگر متن شما عدد یا واژه لاتین دارد، هنگام **Load from Strip** هشدار می‌گیرید. علتش در بخش محدودیت‌ها آمده است.
+> **Load from Strip** وقتی هشدار می‌دهد که اعمال دوبارهٔ متن بازخوانی‌شده ظاهر استریپ را تغییر دهد.
 
 #### فونت و ظاهر
 
 ![فونت‌ها و تنظیمات ظاهر](docs/images/panel-fonts-appearance.png)
 
-فونت پیش‌فرض Text Strip در Blender حروف فارسی را درست نشان نمی‌دهد، پس بعد از ساخت استریپ حتماً یک فونت اعمال کنید. سه فهرست جدا در اختیار دارید:
+فونت پیش‌فرض Text Strip در Blender حروف فارسی را درست نشان نمی‌دهد، پس بعد از ساخت استریپ حتماً یک فونت اعمال کنید. از یکی از سه فهرست زیر فونت انتخاب کنید و **Apply Font** را بزنید.
 
 - **Bundled Fonts:** ۷۶ فونت همراه افزونه.
 - **System Fonts:** فونت‌های نصب‌شده روی سیستم‌عامل. اگر فهرست خالی بود دکمه Rescan را بزنید.
@@ -102,6 +102,8 @@ Create, type, paste, style, and convert Persian or Arabic text into a clean mesh
 دکمه **Reset Appearance** همه را به حالت اولیه برمی‌گرداند ولی تراز راست را حفظ می‌کند.
 
 #### پیش‌تنظیم استایل
+
+Blender 5.0.1 کنترل‌های **Line Spacing** و **Text Style Presets** را برای Text Strip ندارد. هر دو در Blender 5.2 و 5.3 در دسترس‌اند.
 
 ردیف **Text Style Presets** بالای بخش Appearance، ظاهر فعلی را ذخیره می‌کند تا با یک کلیک روی استریپ‌های دیگر اعمال شود. از مکانیزم خود Blender استفاده می‌کند، پس پیش‌تنظیم‌هایی که جای دیگری در Blender ساخته‌اید هم اینجا دیده می‌شوند.
 
@@ -163,9 +165,9 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 
 ## English
 
-### What’s new in version 3.4
+### Main features
 
-- **Blender 5.3:** version 3.4.0 tested with Blender 5.3.0, 5.2.0 LTS and 5.0.1 on Windows.
+- **Blender 5.3:** version 3.4.1 tested with Blender 5.3.0, 5.2.0 LTS and 5.0.1 on Windows.
 - **Panel compatibility:** Line Spacing and Style Presets are shown only when their APIs are available, so the panel also works in Blender 5.0.1 without those controls.
 
 - **Add Text:** Creates the “Persian Type 3.4” RTL text at the 3D Cursor and immediately enables Persian typing.
@@ -188,7 +190,7 @@ Mesh Clean از چند Text Object انتخاب‌شده نیز پشتیبانی
 
 ### Installation
 
-1. Download [`persiantype-3.4.0.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.4/persiantype-3.4.0.zip).
+1. Download [`persiantype-3.4.1.zip`](https://github.com/damyarpro/PERSIAN-TYPE/releases/download/v3.4.1/persiantype-3.4.1.zip).
 2. Open `Edit > Preferences > Get Extensions` in Blender.
 3. Choose `Install from Disk` from the menu.
 4. Select the ZIP file and enable the extension.
@@ -223,19 +225,19 @@ The panel lives in the Video Sequencer sidebar under the **Persian type** tab. T
 
 #### Creating and editing text
 
-1. Click **Add Text Strip**. A right-aligned text strip is created at the current frame on the first free channel.
-2. Type Persian into the line list. Each row is one line, and the buttons beside the list add, remove and reorder lines.
+1. Click **Add Text Strip**. A right-aligned text strip is created at the current frame on a channel chosen by the add-on.
+2. Select a line in the right-aligned list and edit it in **Edit Active Line**. Use the buttons beside the list to add, remove or reorder lines.
 3. Click **Apply to Strip** to shape the text and write it into the strip.
-4. **Paste** reads the clipboard with Arabic character normalization and spreads it across the lines.
+4. **Paste** normalizes the clipboard text and replaces the line list.
 5. **Load from Strip** reads the strip's existing text back into the list for further editing.
 
-> If your text contains digits or Latin words, **Load from Strip** warns you. The Limitations section explains why.
+> **Load from Strip** warns when applying the recovered text again would change how the strip looks.
 
 #### Fonts and appearance
 
 ![Fonts and appearance controls](docs/images/panel-fonts-appearance.png)
 
-Blender's default text strip font does not render Persian correctly, so always apply a font after creating a strip. Three separate lists are available:
+Blender's default text strip font does not render Persian correctly, so always apply a font after creating a strip. Choose a font from one of these lists and click **Apply Font**.
 
 - **Bundled Fonts:** the 76 fonts shipped with the extension.
 - **System Fonts:** the fonts installed on your operating system. Press Rescan if the list is empty.
@@ -246,6 +248,8 @@ The **Appearance** section controls size, position on frame, wrap width, line sp
 **Reset Appearance** restores the defaults while keeping right alignment.
 
 #### Style presets
+
+Blender 5.0.1 does not provide **Line Spacing** or **Text Style Presets** for text strips. Both are available in Blender 5.2 and 5.3.
 
 The **Text Style Presets** row at the top of Appearance saves the current look so it can be applied to other strips with one click. It uses Blender's own preset mechanism, so presets created elsewhere in Blender appear here too.
 
@@ -365,5 +369,5 @@ Checks run in isolated Windows profiles cover reload/cleanup, 3D typing/deletion
 ## Links
 
 - [Latest release](https://github.com/damyarpro/PERSIAN-TYPE/releases/latest)
-- [یادداشت نسخه 3.4 | Version 3.4 release notes](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.4)
+- [یادداشت نسخه 3.4.1 | Version 3.4.1 release notes](https://github.com/damyarpro/PERSIAN-TYPE/releases/tag/v3.4.1)
 - [Report an issue](https://github.com/damyarpro/PERSIAN-TYPE/issues)
