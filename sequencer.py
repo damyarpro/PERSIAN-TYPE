@@ -691,31 +691,34 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         appearance.active = strip is not None
         appearance.label(text="Appearance", icon='SETTINGS')
 
-        preset_row = appearance.row(align=True)
-        # enabled, not just active: the add operator has no poll of its own
-        # and would raise on a None strip. It resolves its target through
-        # bpy.context.active_strip, so the presets are offered only when that
-        # names the same strip the rest of this section edits -- otherwise a
-        # preset could be saved from, or applied to, a strip not shown here.
-        # Compared with ==, not is: two reads of the same strip hand back two
-        # different bpy_struct wrappers, and only == compares what they wrap.
-        preset_row.enabled = strip is not None and _preset_strip(context) == strip
-        # Deliberately not run through _shape_for_display. A preset name is
-        # user text and could be Persian, but the menu this labels is drawn by
-        # Blender's own draw_preset and lists those names unshaped. Shaping
-        # only the header would leave the active preset unrecognisable against
-        # the list it was chosen from.
-        preset_row.menu(
-            PT_MT_text_style_presets.bl_idname,
-            text=PT_MT_text_style_presets.active_preset_name(),
-            icon='PRESET',
-        )
-        preset_row.operator(
-            "sequencer.text_strip_style_preset_add", text="", icon='ADD',
-        )
-        preset_row.operator(
-            "sequencer.text_strip_style_preset_add", text="", icon='REMOVE',
-        ).remove_active = True
+        # Text style presets were added after Blender 5.0.
+        if (PT_MT_text_style_presets._owner() is not None
+                and hasattr(bpy.types, "SEQUENCER_OT_text_strip_style_preset_add")):
+            preset_row = appearance.row(align=True)
+            # enabled, not just active: the add operator has no poll of its own
+            # and would raise on a None strip. It resolves its target through
+            # bpy.context.active_strip, so the presets are offered only when that
+            # names the same strip the rest of this section edits -- otherwise a
+            # preset could be saved from, or applied to, a strip not shown here.
+            # Compared with ==, not is: two reads of the same strip hand back two
+            # different bpy_struct wrappers, and only == compares what they wrap.
+            preset_row.enabled = strip is not None and _preset_strip(context) == strip
+            # Deliberately not run through _shape_for_display. A preset name is
+            # user text and could be Persian, but the menu this labels is drawn by
+            # Blender's own draw_preset and lists those names unshaped. Shaping
+            # only the header would leave the active preset unrecognisable against
+            # the list it was chosen from.
+            preset_row.menu(
+                PT_MT_text_style_presets.bl_idname,
+                text=PT_MT_text_style_presets.active_preset_name(),
+                icon='PRESET',
+            )
+            preset_row.operator(
+                "sequencer.text_strip_style_preset_add", text="", icon='ADD',
+            )
+            preset_row.operator(
+                "sequencer.text_strip_style_preset_add", text="", icon='REMOVE',
+            ).remove_active = True
 
         if strip is None:
             appearance.label(text="Select a Text strip", icon='INFO')
@@ -726,14 +729,17 @@ class SEQUENCER_PT_persiantype(bpy.types.Panel):
         col.prop(strip, "location", text="Location")
         col.prop(strip, "wrap_width", text="Wrap Width")
 
+        # Blender 5.0 has no configurable text strip line spacing.
         col = appearance.column(align=True)
-        col.prop(strip, "use_absolute_line_spacing", text="Absolute Line Spacing")
-        # The two spacing properties are mutually exclusive in Blender's own
-        # renderer, so only the one in effect is shown.
-        if strip.use_absolute_line_spacing:
-            col.prop(strip, "abs_space_line", text="Line Spacing")
-        else:
-            col.prop(strip, "space_line", text="Line Spacing")
+        if hasattr(strip, "use_absolute_line_spacing"):
+            col.prop(strip, "use_absolute_line_spacing", text="Absolute Line Spacing")
+        # Only expose the spacing property used by the renderer.
+        spacing_property = (
+            "abs_space_line" if getattr(strip, "use_absolute_line_spacing", False)
+            else "space_line"
+        )
+        if hasattr(strip, spacing_property):
+            col.prop(strip, spacing_property, text="Line Spacing")
 
         col = appearance.column(align=True)
         col.prop(strip, "color", text="Color")
